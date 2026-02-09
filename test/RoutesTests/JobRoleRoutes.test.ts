@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Router } from 'express';
-import { JobRoleController } from '../../src/controllers/job-role.controller.js';
+import express from 'express';
+import request from 'supertest';
 import { JobRoleService } from '../../src/services/job-role.service.js';
 import jobRoleRouter from '../../src/routes/job-role.routes.js';
 
@@ -37,58 +37,41 @@ describe('JobRole Routes', () => {
     JobRoleService.prototype.getOpenJobRoles = mockGetOpenJobRoles;
   });
 
-  describe('Route Configuration', () => {
-    it('should export a valid Router instance', () => {
-      // Arrange - already done in beforeEach
+  const buildApp = () => {
+    const app = express();
+    app.use(jobRoleRouter);
+    return app;
+  };
 
-      // Act & Assert
-      expect(jobRoleRouter).toBeDefined();
-      expect(jobRoleRouter).toBeInstanceOf(Router);
+  describe('GET /job-roles', () => {
+    it('should return 200 with job role data', async () => {
+      const app = buildApp();
+
+      const response = await request(app).get('/job-roles');
+
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual(mockJobRoleResponse);
+      expect(mockGetOpenJobRoles).toHaveBeenCalledTimes(1);
     });
 
-    it('should have GET /job-roles route registered', () => {
-      // Arrange - already done in beforeEach
+    it('should return 200 with an empty array when no roles exist', async () => {
+      mockGetOpenJobRoles.mockResolvedValueOnce([]);
+      const app = buildApp();
 
-      // Act & Assert
-      // Verify router has the expected route stack
-      const routeFound = jobRoleRouter.stack.some(
-        (layer: any) => layer.route?.path === '/job-roles' && layer.route?.methods?.get
-      );
-      expect(routeFound).toBe(true);
-    });
-  });
+      const response = await request(app).get('/job-roles');
 
-  describe('JobRole Endpoint Integration', () => {
-    it('should call controller getJobRoles method when route is invoked', async () => {
-      // Arrange
-      const mockRequest: any = {};
-      const mockResponse: any = {
-        status: vi.fn().mockReturnThis(),
-        json: vi.fn().mockReturnThis(),
-      };
-
-      const controller = new JobRoleController();
-      const controllerSpy = vi.spyOn(controller, 'getJobRoles');
-
-      // Act
-      await controller.getJobRoles(mockRequest, mockResponse);
-
-      // Assert
-      expect(controllerSpy).toHaveBeenCalledWith(mockRequest, mockResponse);
+      expect(response.status).toBe(200);
+      expect(response.body).toEqual([]);
+      expect(mockGetOpenJobRoles).toHaveBeenCalledTimes(1);
     });
 
-    it('should have service method available for route handler', async () => {
-      // Arrange - already done in beforeEach
-      const controller = new JobRoleController();
+    it('should return 500 when the service throws', async () => {
+      mockGetOpenJobRoles.mockRejectedValueOnce(new Error('Service error'));
+      const app = buildApp();
 
-      // Act
-      const result = await controller.getJobRoles({} as any, {
-        status: vi.fn().mockReturnThis(),
-        json: vi.fn().mockReturnThis(),
-      } as any);
+      const response = await request(app).get('/job-roles');
 
-      // Assert
-      expect(mockGetOpenJobRoles).toHaveBeenCalled();
+      expect(response.status).toBe(500);
     });
   });
 });
