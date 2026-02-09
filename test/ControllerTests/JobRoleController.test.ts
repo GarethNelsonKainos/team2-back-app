@@ -29,6 +29,7 @@ describe('JobRoleController', () => {
     mockResponse = {
       status: vi.fn().mockReturnThis(),
       json: vi.fn().mockReturnThis(),
+      send: vi.fn().mockReturnThis(),
     };
 
     // Create mock function for Service method
@@ -72,6 +73,7 @@ describe('JobRoleController', () => {
 
       // Assert
       expect(mockResponse.status).toHaveBeenCalledWith(500);
+      expect(mockResponse.send).toHaveBeenCalled();
     });
 
     it('should handle empty job roles array', async () => {
