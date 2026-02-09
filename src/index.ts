@@ -1,3 +1,4 @@
+import express from 'express';
 import jobRoleRoutes from './routes/job-role.routes';
 
 const app = express();
