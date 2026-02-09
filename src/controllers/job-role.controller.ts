@@ -12,7 +12,7 @@ export class JobRoleController {
     
     catch (error) {
       console.error('Error fetching job roles:', error);
-      res.status(500);
+      res.sendStatus(500);
     }
   }
 }
