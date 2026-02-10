@@ -2,10 +2,37 @@ name: CI Pipeline
 
 on:
   pull_request:
-    branches: [main]
+    branches:
+        - main
+  push:
+    branches: 
+        - "**"
 
 jobs:
+    lint-on-push:
+        if: github.event_name == 'push'
+        runs-on: ubuntu-latest
+
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Node Setup
+          uses: actions/setup-node@v4
+          with:
+            node-version: '20'
+        
+        - name: Install dependencies
+          run: npm install
+
+        - name: Run Biome Linting
+          run: npm run lint:check
+
+        - name: Run Biome Formatting Check
+          run: npm run format:check
+
     code-quality:
+        if: github.event_name == 'pull_request'
         runs-on: ubuntu-latest
 
         steps:
@@ -28,6 +55,7 @@ jobs:
 
     test:
         needs: code-quality
+        if: github.event_name == 'pull_request'
         runs-on: ubuntu-latest
         
         steps:
@@ -50,6 +78,7 @@ jobs:
     
     build:
         needs: test
+        if: github.event_name == 'pull_request'
         runs-on: ubuntu-latest
         
         steps:
