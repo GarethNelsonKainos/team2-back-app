@@ -19,3 +19,7 @@ build/
 logs/
 *.log
 src/generated/prisma
+
+coverage/
+
+src/generated/
