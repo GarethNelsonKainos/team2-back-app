@@ -1,0 +1,54 @@
+//Setup .env file//
+//DATABASE_URL="postgresql://name@localhost:5432/postgres?schema=schema_name"
+//SCHEMA_NAME="schema_name" Ensure you change schema name and your name for connection to work
+
+//MIGRATE Command Run first//
+//npx prisma migrate dev --name init (init refers to name of migration v2, v3 etc.)
+
+//Generate Prisma Client//
+//npx prisma generate
+
+//Run test script//
+//npx tsx prisma/testScript.ts
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+ 
+
+model Capability {
+  capabilityId   String    @id @default(uuid())
+  capabilityName String
+
+  jobRoles       JobRole[]
+
+  @@unique([capabilityName])
+}
+
+model Band {
+  nameId   String   @id @default(uuid())
+  bandName String
+
+  jobRoles JobRole[]
+
+  @@unique([bandName])
+}
+
+model JobRole {
+  jobRoleId    String   @id @default(uuid())
+  roleName     String
+  location     String
+  closingDate  DateTime
+
+  capabilityId String
+  capability   Capability @relation(fields: [capabilityId], references: [capabilityId])
+
+  bandId       String
+  band         Band       @relation(fields: [bandId], references: [nameId])
+
+}
