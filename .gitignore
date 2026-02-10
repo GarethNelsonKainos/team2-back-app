@@ -15,6 +15,8 @@ Thumbs.db
 
 dist/
 build/
+coverage/
+src/generated/
 
 logs/
 *.log

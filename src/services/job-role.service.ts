@@ -1,18 +1,22 @@
-import { JobRoleDao } from '../daos/job-role.dao.js';
-import { JobRoleResponse } from '../models/job-role.response.model.js';
-import { JobRoleMapper } from '../mappers/job-role.mapper.js';
+import { JobRoleDao } from "../daos/job-role.dao.js";
+import type { JobRoleResponse } from "../models/job-role.response.model.js";
+import { JobRoleMapper } from "../mappers/job-role.mapper.js";
 
 export class JobRoleService {
-  private jobRoleDao = new JobRoleDao();
+	private jobRoleDao = new JobRoleDao();
 
-  async getOpenJobRoles(): Promise<JobRoleResponse[]> {
-    const { jobRoles, capabilities, bands } = await this.jobRoleDao.getOpenJobRoles();
+	async getOpenJobRoles(): Promise<JobRoleResponse[]> {
+		const { jobRoles, capabilities, bands } =
+			await this.jobRoleDao.getOpenJobRoles();
 
-    const capabilityMap = new Map(
-      capabilities.map((capability) => [capability.capabilityId, capability.capabilityName])
-    );
-    const bandMap = new Map(bands.map((band) => [band.bandId, band.bandName]));
+		const capabilityMap = new Map(
+			capabilities.map((capability) => [
+				capability.capabilityId,
+				capability.capabilityName,
+			]),
+		);
+		const bandMap = new Map(bands.map((band) => [band.bandId, band.bandName]));
 
-    return JobRoleMapper.toResponseList(jobRoles, capabilityMap, bandMap);
-  }
+		return JobRoleMapper.toResponseList(jobRoles, capabilityMap, bandMap);
+	}
 }
