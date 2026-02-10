@@ -1,8 +1,8 @@
-import { prisma } from './prisma'
+import { prisma } from '../src/daos/prisma'
 
 async function main() {
     // Create a Capability
-    const capability = await prisma.capability.create({
+    /* const capability = await prisma.capability.create({
         data: {
             capabilityName: 'Software Engineering',
         },
@@ -30,16 +30,16 @@ async function main() {
 
     // Read all Bands
     const allBands = await prisma.band.findMany();
-    console.log('All Bands:', allBands);
+    console.log('All Bands:', allBands); */
 
     // Create a JobRole linked to the above Capability and Band
     const jobRole = await prisma.jobRole.create({
         data: {
-            roleName: 'Backend Developer',
-            location: 'Remote',
+            roleName: 'Backend Developer 2',
+            location: 'Belfast',
             closingDate: new Date('2026-03-01T00:00:00Z'),
-            capabilityId: capability.capabilityId,
-            bandId: band.nameId,
+            capabilityId: '692c30e5-9bb4-4bfd-a28f-e17034d54f00',
+            bandId: '7061da5b-9309-44c0-947f-089d31ccb1a9',
         },
     });
     console.log('Created JobRole:', jobRole);
