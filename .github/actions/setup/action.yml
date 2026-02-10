@@ -1,0 +1,16 @@
+name: 'Setup Node and Dependencies'
+description: 'Checkout code, setup Node.js, and install dependencies'
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Node Setup
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install dependencies
+      run: npm install
+      shell: bash

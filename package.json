@@ -11,10 +11,10 @@
 		"start": "node dist/index.js",
 		"test": "vitest",
 		"test:coverage": "vitest --coverage",
-		"format": "biome format --write .",
-		"lint": "biome lint --write .",
-		"format:check": "biome format .",
-		"lint:check": "biome lint ."
+    "lint": "biome lint .",
+		"lint:fix": "biome lint --write .",
+    "format:check": "biome format .",
+    "format": "biome format --write ."
 	},
 	"repository": {
 		"type": "git",

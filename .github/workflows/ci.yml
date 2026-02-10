@@ -13,19 +13,11 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-
-        - name: Node Setup
-          uses: actions/setup-node@v4
-          with:
-            node-version: '20'
-        
-        - name: Install dependencies
-          run: npm install
+        - name: Setup Node and Dependencies
+          uses: ./.github/actions/setup
 
         - name: Run Biome Linting
-          run: npm run lint:check
+          run: npm run lint
 
         - name: Run Biome Formatting Check
           run: npm run format:check
@@ -35,16 +27,8 @@ jobs:
         runs-on: ubuntu-latest
         
         steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-
-        - name: Node Setup
-          uses: actions/setup-node@v4
-          with:
-            node-version: '20'
-
-        - name: Install dependencies
-          run: npm install
+        - name: Setup Node and Dependencies
+          uses: ./.github/actions/setup
 
         - name: Run Tests with Coverage
           run: npm run test:coverage
@@ -54,16 +38,8 @@ jobs:
         runs-on: ubuntu-latest
         
         steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-
-        - name: Node Setup
-          uses: actions/setup-node@v4
-          with:
-            node-version: '20'
-
-        - name: Install dependencies
-          run: npm install
+        - name: Setup Node and Dependencies
+          uses: ./.github/actions/setup
 
         - name: Build Application
           run: npm run build
