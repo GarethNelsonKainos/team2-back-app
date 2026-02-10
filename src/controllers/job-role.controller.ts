@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { JobRoleService } from '../services/job-role.service';
+import { JobRoleService } from '../services/job-role.service.js';
 
 export class JobRoleController {
   private jobRoleService = new JobRoleService();

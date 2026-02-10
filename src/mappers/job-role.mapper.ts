@@ -1,5 +1,5 @@
-import { JobRole } from '../models/job-role.model';
-import { JobRoleResponse } from '../models/job-role.response.model';
+import { JobRole } from '../models/job-role.model.js';
+import { JobRoleResponse } from '../models/job-role.response.model.js';
 
 export class JobRoleMapper {
   static toResponse(jobRole: JobRole, capabilityName: string, bandName: string): JobRoleResponse {
@@ -9,7 +9,7 @@ export class JobRoleMapper {
       location: jobRole.location,
       capability: capabilityName,
       band: bandName,
-      closingDate: jobRole.closingDate.toISOString().split('T')[0],
+      closingDate: jobRole.closingDate.toISOString().slice(0, 10),
     };
   }
 

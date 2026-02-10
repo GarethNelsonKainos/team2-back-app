@@ -1,4 +1,4 @@
-import { JobRole } from '../models/job-role.model';
+import { JobRole } from '../models/job-role.model.js';
 
 export interface Capability {
   capabilityId: number;

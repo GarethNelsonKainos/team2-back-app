@@ -1,5 +1,5 @@
 import express from 'express';
-import jobRoleRoutes from './routes/job-role.routes';
+import jobRoleRoutes from './routes/job-role.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;

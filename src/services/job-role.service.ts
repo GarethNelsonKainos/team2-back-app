@@ -1,6 +1,6 @@
-import { JobRoleDao } from '../daos/job-role.dao';
-import { JobRoleResponse } from '../models/job-role.response.model';
-import { JobRoleMapper } from '../mappers/job-role.mapper';
+import { JobRoleDao } from '../daos/job-role.dao.js';
+import { JobRoleResponse } from '../models/job-role.response.model.js';
+import { JobRoleMapper } from '../mappers/job-role.mapper.js';
 
 export class JobRoleService {
   private jobRoleDao = new JobRoleDao();

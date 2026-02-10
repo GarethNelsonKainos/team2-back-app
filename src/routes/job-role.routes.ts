@@ -1,9 +1,9 @@
 import express, { Router } from 'express';
-import { JobRoleController } from '../controllers/job-role.controller';
+import { JobRoleController } from '../controllers/job-role.controller.js';
 
 const router: Router = express.Router();
 const jobRoleController = new JobRoleController();
 
-router.get('/job-roles', (req, res) => jobRoleController.getJobRoles(req, res));
+router.get('/job-roles', jobRoleController.getJobRoles.bind(jobRoleController));
 
 export default router;
