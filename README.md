@@ -4,14 +4,16 @@ Team 2 Backend Application Feb/March 2026
 ## Environment Setup
 Create a `.env` file in the project root with the following content, replacing the placeholders with your actual database credentials:
 ```env
-DATABASE_URL="postgresql://<username>:<password>@localhost:5432/postgres?schema=job_roles_db"
-SCHEMA_NAME="job_roles_db"
+DATABASE_URL="postgresql://<username>:<password>@localhost:5432/<database_name>?schema=<schema_name>"
+SCHEMA_NAME="<schema_name>"
 ```
 
 Additionally, add `PORT` to the `.env` file if you want to specify a custom port for the backend server (default is 3000):
 ```env
 PORT=1234
 ```
+
+**DO NOT** commit the `.env` file to version control, as it contains sensitive information. The `.gitignore` file is already configured to ignore it.
 
 ## Using the API (Backend)
 Install dependencies:
@@ -44,7 +46,7 @@ Run tests:
 npm run test
 ```
 
-Views tests with coverage:
+View tests with coverage:
 
 ```sh
 npm run test:coverage
