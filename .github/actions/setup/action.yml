@@ -1,11 +1,8 @@
 name: 'Setup Node and Dependencies'
-description: 'Checkout code, setup Node.js, and install dependencies'
+description: 'Setup Node.js and install dependencies'
 runs:
   using: 'composite'
   steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
     - name: Node Setup
       uses: actions/setup-node@v4
       with:
