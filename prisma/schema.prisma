@@ -1,16 +1,3 @@
-//Setup .env file//
-//DATABASE_URL="postgresql://name@localhost:5432/postgres?schema=schema_name"
-//SCHEMA_NAME="schema_name" Ensure you change schema name and your name for connection to work
-
-//MIGRATE Command Run first//
-//npx prisma migrate dev --name init (init refers to name of migration v2, v3 etc.)
-
-//Generate Prisma Client//
-//npx prisma generate
-
-//Run test script//
-//npx tsx prisma/testScript.ts
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
