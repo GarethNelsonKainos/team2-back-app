@@ -6,4 +6,5 @@ const jobRoleController = new JobRoleController();
 
 router.get("/job-roles", jobRoleController.getJobRoles.bind(jobRoleController));
 
+router.get("/job-roles/:id", jobRoleController.getJobRoleById.bind(jobRoleController));
 export default router;
