@@ -9,4 +9,10 @@ export class JobRoleService {
 
 		return jobRoles;
 	}
+
+	async getJobRoleById(id: string): Promise<JobRole | null> {
+		const jobRole = await this.jobRoleDao.getJobRoleById(id);
+
+		return jobRole;
+	}
 }
