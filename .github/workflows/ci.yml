@@ -1,0 +1,54 @@
+name: CI Pipeline
+
+on:
+  pull_request:
+    branches:
+        - main
+  push:
+    branches: 
+        - "**"
+
+jobs:
+    code-quality:
+        runs-on: ubuntu-latest
+
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Setup Node and Dependencies
+          uses: ./.github/actions/setup
+
+        - name: Run Biome Linting
+          run: npm run lint
+
+        - name: Run Biome Formatting Check
+          run: npm run format:check
+
+    test:
+        needs: code-quality
+        runs-on: ubuntu-latest
+        
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Setup Node and Dependencies
+          uses: ./.github/actions/setup
+
+        - name: Run Tests with Coverage
+          run: npm run test:coverage
+    
+    build:
+        needs: test
+        runs-on: ubuntu-latest
+        
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Setup Node and Dependencies
+          uses: ./.github/actions/setup
+
+        - name: Build Application
+          run: npm run build

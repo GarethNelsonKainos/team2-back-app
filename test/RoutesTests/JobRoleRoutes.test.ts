@@ -3,6 +3,11 @@ import express from "express";
 import request from "supertest";
 import { JobRoleDao } from "../../src/daos/job-role.dao.js";
 import jobRoleRouter from "../../src/routes/job-role.routes.js";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import express from "express";
+import request from "supertest";
+import { JobRoleDao } from "../../src/daos/job-role.dao.js";
+import jobRoleRouter from "../../src/routes/job-role.routes.js";
 
 describe("JobRole Routes - Integration Tests", () => {
   let getOpenJobRolesSpy: ReturnType<typeof vi.spyOn>;
@@ -95,15 +100,15 @@ describe("JobRole Routes - Integration Tests", () => {
       .mockResolvedValue(mockDaoResponse);
   });
 
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
 
-  const buildApp = () => {
-    const app = express();
-    app.use(jobRoleRouter);
-    return app;
-  };
+	const buildApp = () => {
+		const app = express();
+		app.use(jobRoleRouter);
+		return app;
+	};
 
   describe("GET /job-roles", () => {
     it("should return 200 with job role data after full stack processing", async () => {
@@ -111,10 +116,10 @@ describe("JobRole Routes - Integration Tests", () => {
 
       const response = await request(app).get("/job-roles");
 
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual(expectedResponse);
-      expect(getOpenJobRolesSpy).toHaveBeenCalledTimes(1);
-    });
+			expect(response.status).toBe(200);
+			expect(response.body).toEqual(expectedResponse);
+			expect(getOpenJobRolesSpy).toHaveBeenCalledTimes(1);
+		});
 
     it("should return 200 with an empty array when no roles exist", async () => {
       getOpenJobRolesSpy.mockResolvedValueOnce([]);
@@ -122,10 +127,10 @@ describe("JobRole Routes - Integration Tests", () => {
 
       const response = await request(app).get("/job-roles");
 
-      expect(response.status).toBe(200);
-      expect(response.body).toEqual([]);
-      expect(getOpenJobRolesSpy).toHaveBeenCalledTimes(1);
-    });
+			expect(response.status).toBe(200);
+			expect(response.body).toEqual([]);
+			expect(getOpenJobRolesSpy).toHaveBeenCalledTimes(1);
+		});
 
     it("should return 500 when the DAO throws", async () => {
       getOpenJobRolesSpy.mockRejectedValueOnce(new Error("Database error"));

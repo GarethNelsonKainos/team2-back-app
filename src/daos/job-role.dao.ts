@@ -2,8 +2,8 @@ import { JobRole } from '../generated/prisma/client';
 import { prisma } from './prisma'
 
 export interface Capability {
-  capabilityId: number;
-  capabilityName: string;
+	capabilityId: number;
+	capabilityName: string;
 }
 
 export interface Band {

@@ -1,8 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { JobRoleService } from "../../src/services/job-role.service.js";
 import { JobRoleDao } from "../../src/daos/job-role.dao.js";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { JobRoleService } from "../../src/services/job-role.service.js";
+import { JobRoleDao } from "../../src/daos/job-role.dao.js";
 
 // Mock the DAO module
+vi.mock("../../src/daos/job-role.dao.js");
 vi.mock("../../src/daos/job-role.dao.js");
 
 describe("JobRoleService", () => {
@@ -71,19 +75,19 @@ describe("JobRoleService", () => {
       // Act
       await service.getOpenJobRoles();
 
-      // Assert
-      expect(mockGetOpenJobRoles).toHaveBeenCalledTimes(1);
-    });
+			// Assert
+			expect(mockGetOpenJobRoles).toHaveBeenCalledTimes(1);
+		});
 
     it("should handle empty results from DAO", async () => {
       // Arrange
       mockGetOpenJobRoles.mockResolvedValue([]);
 
-      // Act
-      const result = await service.getOpenJobRoles();
+			// Act
+			const result = await service.getOpenJobRoles();
 
-      // Assert
-      expect(result).toEqual([]);
-    });
-  });
+			// Assert
+			expect(result).toEqual([]);
+		});
+	});
 });
