@@ -18,7 +18,7 @@ model Capability {
 }
 
 model Band {
-  nameId   String   @id @default(uuid())
+  bandId   String   @id @default(uuid())
   bandName String
 
   jobRoles JobRole[]
@@ -26,16 +26,31 @@ model Band {
   @@unique([bandName])
 }
 
+model Status {
+  statusId   String   @id @default(uuid())
+  statusName String
+
+  jobRoles   JobRole[]
+
+  @@unique([statusName])
+}
+
 model JobRole {
   jobRoleId    String   @id @default(uuid())
   roleName     String
   location     String
   closingDate  DateTime
+  description  String?
+  responsibilities String?
+  sharepointUrl String?
+  numberOfOpenPositions Int?  
 
   capabilityId String
   capability   Capability @relation(fields: [capabilityId], references: [capabilityId])
 
   bandId       String
-  band         Band       @relation(fields: [bandId], references: [nameId])
+  band         Band       @relation(fields: [bandId], references: [bandId])
 
+  statusId     String
+  status       Status     @relation(fields: [statusId], references: [statusId])
 }
