@@ -20,4 +20,8 @@ src/generated/
 
 logs/
 *.log
-/generated/prisma
+src/generated/prisma
+
+coverage/
+
+src/generated/

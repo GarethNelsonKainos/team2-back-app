@@ -15,6 +15,25 @@ PORT=1234
 
 **DO NOT** commit the `.env` file to version control, as it contains sensitive information. The `.gitignore` file is already configured to ignore it.
 
+## Prisma Database Setup
+
+After setting up your `.env` file, follow these steps to set up the database:
+
+1. **Run database migration** (use descriptive names like `init`, `v2`, `v3`, etc.):
+   ```sh
+   npx prisma migrate dev --name init
+   ```
+
+2. **Generate Prisma Client** (required after schema changes):
+   ```sh
+   npx prisma generate
+   ```
+
+3. **Run test script** (optional, to verify setup):
+   ```sh
+   npx tsx prisma/testScript.ts
+   ```
+
 ## Using the API (Backend)
 Install dependencies:
 
@@ -57,12 +76,6 @@ Run linting and formatting checks:
 ```sh
 npm run lint
 npm run format:check
-```
-
-Migrate the database (after making changes to the Prisma schema):
-
-```sh
-npx prisma migrate dev
 ```
 
 ## UI (Frontend)

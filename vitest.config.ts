@@ -14,6 +14,7 @@ export default defineConfig({
 			},
 			exclude: [
 				"node_modules/",
+				"generated/prisma/",
 				"dist/",
 				"coverage/",
 				"**/*.config.ts",

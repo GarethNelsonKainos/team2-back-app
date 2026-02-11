@@ -1,22 +1,12 @@
 import { JobRoleDao } from "../daos/job-role.dao.js";
-import type { JobRoleResponse } from "../models/job-role.response.model.js";
-import { JobRoleMapper } from "../mappers/job-role.mapper.js";
+import type { JobRole } from "../generated/prisma/client.js";
 
 export class JobRoleService {
 	private jobRoleDao = new JobRoleDao();
 
-	async getOpenJobRoles(): Promise<JobRoleResponse[]> {
-		const { jobRoles, capabilities, bands } =
-			await this.jobRoleDao.getOpenJobRoles();
+	async getOpenJobRoles(): Promise<JobRole[]> {
+		const jobRoles = await this.jobRoleDao.getOpenJobRoles();
 
-		const capabilityMap = new Map(
-			capabilities.map((capability) => [
-				capability.capabilityId,
-				capability.capabilityName,
-			]),
-		);
-		const bandMap = new Map(bands.map((band) => [band.bandId, band.bandName]));
-
-		return JobRoleMapper.toResponseList(jobRoles, capabilityMap, bandMap);
+		return jobRoles;
 	}
 }

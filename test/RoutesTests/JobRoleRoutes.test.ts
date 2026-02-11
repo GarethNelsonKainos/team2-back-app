@@ -8,51 +8,83 @@ describe("JobRole Routes - Integration Tests", () => {
 	let getOpenJobRolesSpy: ReturnType<typeof vi.spyOn>;
 
 	// Mock data at the DAO level (database boundary)
-	const mockDaoResponse = {
-		jobRoles: [
-			{
-				jobRoleId: 1,
-				roleName: "Software Engineer",
-				location: "Belfast",
-				capabilityId: 1,
-				bandId: 2,
-				closingDate: new Date("2026-03-15"),
-				status: "open",
-			},
-			{
-				jobRoleId: 2,
-				roleName: "Data Analyst",
-				location: "London",
-				capabilityId: 3,
-				bandId: 2,
-				closingDate: new Date("2026-04-01"),
-				status: "open",
-			},
-		],
-		capabilities: [
-			{ capabilityId: 1, capabilityName: "Engineering" },
-			{ capabilityId: 3, capabilityName: "Data" },
-		],
-		bands: [{ bandId: 2, bandName: "Consultant" }],
-	};
-
-	// Expected response after full stack processing (mapper transforms DAO → Response)
-	const expectedResponse = [
+	// Mock data matching Prisma's return structure
+	const mockDaoResponse = [
 		{
-			jobRoleId: 1,
+			jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
 			roleName: "Software Engineer",
 			location: "Belfast",
-			capability: "Engineering",
-			band: "Consultant",
-			closingDate: "2026-03-15",
+			capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+			bandId: "770e8400-e29b-41d4-a716-446655440002",
+			closingDate: new Date("2026-03-15"),
+			capability: {
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				capabilityName: "Engineering",
+				jobRoles: [],
+			},
+			band: {
+				nameId: "770e8400-e29b-41d4-a716-446655440002",
+				bandName: "Consultant",
+				jobRoles: [],
+			},
 		},
 		{
-			jobRoleId: 2,
+			jobRoleId: "550e8400-e29b-41d4-a716-446655440003",
 			roleName: "Data Analyst",
 			location: "London",
-			capability: "Data",
-			band: "Consultant",
-			closingDate: "2026-04-01",
+			capabilityId: "660e8400-e29b-41d4-a716-446655440004",
+			bandId: "770e8400-e29b-41d4-a716-446655440002",
+			closingDate: new Date("2026-04-01"),
+			capability: {
+				capabilityId: "660e8400-e29b-41d4-a716-446655440004",
+				capabilityName: "Data",
+				jobRoles: [],
+			},
+			band: {
+				nameId: "770e8400-e29b-41d4-a716-446655440002",
+				bandName: "Consultant",
+				jobRoles: [],
+			},
+		},
+	];
+
+	// Expected response (same as what DAO returns - no transformation)
+	const expectedResponse = [
+		{
+			jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+			roleName: "Software Engineer",
+			location: "Belfast",
+			capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+			bandId: "770e8400-e29b-41d4-a716-446655440002",
+			closingDate: "2026-03-15T00:00:00.000Z", // ISO string format
+			capability: {
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				capabilityName: "Engineering",
+				jobRoles: [],
+			},
+			band: {
+				nameId: "770e8400-e29b-41d4-a716-446655440002",
+				bandName: "Consultant",
+				jobRoles: [],
+			},
+		},
+		{
+			jobRoleId: "550e8400-e29b-41d4-a716-446655440003",
+			roleName: "Data Analyst",
+			location: "London",
+			capabilityId: "660e8400-e29b-41d4-a716-446655440004",
+			bandId: "770e8400-e29b-41d4-a716-446655440002",
+			closingDate: "2026-04-01T00:00:00.000Z",
+			capability: {
+				capabilityId: "660e8400-e29b-41d4-a716-446655440004",
+				capabilityName: "Data",
+				jobRoles: [],
+			},
+			band: {
+				nameId: "770e8400-e29b-41d4-a716-446655440002",
+				bandName: "Consultant",
+				jobRoles: [],
+			},
 		},
 	];
 
@@ -85,11 +117,7 @@ describe("JobRole Routes - Integration Tests", () => {
 		});
 
 		it("should return 200 with an empty array when no roles exist", async () => {
-			getOpenJobRolesSpy.mockResolvedValueOnce({
-				jobRoles: [],
-				capabilities: [],
-				bands: [],
-			});
+			getOpenJobRolesSpy.mockResolvedValueOnce([]);
 			const app = buildApp();
 
 			const response = await request(app).get("/job-roles");
@@ -106,39 +134,6 @@ describe("JobRole Routes - Integration Tests", () => {
 			const response = await request(app).get("/job-roles");
 
 			expect(response.status).toBe(500);
-		});
-
-		it("should handle missing capability/band mappings", async () => {
-			getOpenJobRolesSpy.mockResolvedValueOnce({
-				jobRoles: [
-					{
-						jobRoleId: 1,
-						roleName: "Test Role",
-						location: "Test Location",
-						capabilityId: 999, // Non-existent capability
-						bandId: 888, // Non-existent band
-						closingDate: new Date("2026-03-15"),
-						status: "open",
-					},
-				],
-				capabilities: [],
-				bands: [],
-			});
-			const app = buildApp();
-
-			const response = await request(app).get("/job-roles");
-
-			expect(response.status).toBe(200);
-			expect(response.body).toEqual([
-				{
-					jobRoleId: 1,
-					roleName: "Test Role",
-					location: "Test Location",
-					capability: "Unknown",
-					band: "Unknown",
-					closingDate: "2026-03-15",
-				},
-			]);
 		});
 	});
 });
