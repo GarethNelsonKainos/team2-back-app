@@ -34,8 +34,13 @@ describe("AuthService", () => {
 
 	it("should return token for valid credentials", async () => {
 		// Hash for "password123"
-		const hashedPassword = await import("argon2").then(argon2 => argon2.hash("password123"));
-		mockFindUserByEmail.mockResolvedValue({ ...mockUser, password: hashedPassword });
+		const hashedPassword = await import("argon2").then((argon2) =>
+			argon2.hash("password123"),
+		);
+		mockFindUserByEmail.mockResolvedValue({
+			...mockUser,
+			password: hashedPassword,
+		});
 
 		const result = await authService.login("admin@test.com", "password123");
 		expect(result.token).toBeDefined();
@@ -44,8 +49,13 @@ describe("AuthService", () => {
 	});
 
 	it("should throw error for invalid password", async () => {
-		const hashedPassword = await import("argon2").then(argon2 => argon2.hash("password123"));
-		mockFindUserByEmail.mockResolvedValue({ ...mockUser, password: hashedPassword });
+		const hashedPassword = await import("argon2").then((argon2) =>
+			argon2.hash("password123"),
+		);
+		mockFindUserByEmail.mockResolvedValue({
+			...mockUser,
+			password: hashedPassword,
+		});
 
 		await expect(
 			authService.login("admin@test.com", "wrongpassword"),
@@ -63,8 +73,13 @@ describe("AuthService", () => {
 	});
 
 	it("should throw error if JWT_SECRET is missing", async () => {
-		const hashedPassword = await import("argon2").then(argon2 => argon2.hash("password123"));
-		mockFindUserByEmail.mockResolvedValue({ ...mockUser, password: hashedPassword });
+		const hashedPassword = await import("argon2").then((argon2) =>
+			argon2.hash("password123"),
+		);
+		mockFindUserByEmail.mockResolvedValue({
+			...mockUser,
+			password: hashedPassword,
+		});
 
 		const originalSecret = process.env.JWT_SECRET;
 		delete process.env.JWT_SECRET;
