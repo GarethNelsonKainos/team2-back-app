@@ -52,45 +52,6 @@ async function main() {
 	console.log("✅ All users created with password: password123");
 
 	//===========================================================
-
-	//==================capabilities============================
-	const engineering_capability = await prisma.capability.create({
-		data: {
-			capabilityName: "Engineering",
-		},
-	});
-	console.log("Created Capability:", engineering_capability);
-	const engineering_strategy_and_planning = await prisma.capability.create({
-		data: {
-			capabilityName: "Engineering Strategy and Planning",
-		},
-	});
-	console.log("Created Capability:", engineering_strategy_and_planning);
-	const architecture = await prisma.capability.create({
-		data: {
-			capabilityName: "Architecture",
-		},
-	});
-	console.log("Created Capability:", architecture);
-	const testing_and_quality_assurance = await prisma.capability.create({
-		data: {
-			capabilityName: "Testing and Quality Assurance",
-		},
-	});
-	console.log("Created Capability:", testing_and_quality_assurance);
-	const product_specialist = await prisma.capability.create({
-		data: {
-			capabilityName: "Product Specialist",
-		},
-	});
-	console.log("Created Capability:", product_specialist);
-	const low_code_Enigneering = await prisma.capability.create({
-		data: {
-			capabilityName: "Low Code Engineering",
-		},
-	});
-	console.log("Created Capability:", low_code_Enigneering);
-	//===========================================================
 	//==================capabilities============================
 	const engineering_capability = await prisma.capability.create({
 		data: {
@@ -315,14 +276,6 @@ async function main() {
 }
 
 main()
-	.catch((e) => {
-		console.error(e);
-		process.exitCode = 1;
-	})
-	.finally(async () => {
-		await prisma.$disconnect();
-	});
-
 	.catch((e) => {
 		console.error(e);
 		process.exitCode = 1;
