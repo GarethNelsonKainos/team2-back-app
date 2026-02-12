@@ -40,6 +40,10 @@ jobs:
           run: DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" npx prisma generate
 
         - name: Run Tests with Coverage
+          env:
+            DATABASE_URL: "postgresql://dummy:dummy@localhost/dummy"
+            JWT_SECRET: "test-secret-key-for-ci-testing-minimum-32-chars"
+            JWT_EXPIRES: "24h"
           run: npm run test:coverage
     
     build:
