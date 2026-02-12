@@ -17,12 +17,32 @@ describe("JobRoleController", () => {
 
 	const mockJobRoleResponse = [
 		{
-			jobRoleId: 1,
+			jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
 			roleName: "Software Engineer",
 			location: "Belfast",
-			capability: "Engineering",
-			band: "Consultant",
-			closingDate: "2026-03-15",
+			closingDate: new Date("2026-03-15"),
+			description: null,
+			responsibilities: null,
+			sharepointUrl: null,
+			numberOfOpenPositions: null,
+			capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+			bandId: "770e8400-e29b-41d4-a716-446655440002",
+			statusId: "880e8400-e29b-41d4-a716-446655440003",
+			capability: {
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				capabilityName: "Engineering",
+				jobRoles: [],
+			},
+			band: {
+				bandId: "770e8400-e29b-41d4-a716-446655440002",
+				bandName: "Consultant",
+				jobRoles: [],
+			},
+			status: {
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+				statusName: "Open",
+				jobRoles: [],
+			},
 		},
 	];
 
@@ -95,16 +115,36 @@ describe("JobRoleController", () => {
 		it("should return 200 status with job role data when role exists", async () => {
 			// Arrange
 			const mockJobRole = {
-				jobRoleId: 1,
+				jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
 				roleName: "Software Engineer",
 				location: "Belfast",
-				capability: "Engineering",
-				band: "Consultant",
-				closingDate: "2026-03-15",
+				closingDate: new Date("2026-03-15"),
+				description: null,
+				responsibilities: null,
+				sharepointUrl: null,
+				numberOfOpenPositions: null,
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				bandId: "770e8400-e29b-41d4-a716-446655440002",
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+				capability: {
+					capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+					capabilityName: "Engineering",
+					jobRoles: [],
+				},
+				band: {
+					bandId: "770e8400-e29b-41d4-a716-446655440002",
+					bandName: "Consultant",
+					jobRoles: [],
+				},
+				status: {
+					statusId: "880e8400-e29b-41d4-a716-446655440003",
+					statusName: "Open",
+					jobRoles: [],
+				},
 			};
 			mockGetJobRoleById.mockResolvedValue(mockJobRole);
 			mockRequest = {
-				params: { id: "1" },
+				params: { id: "550e8400-e29b-41d4-a716-446655440000" },
 			};
 
 			await controller.getJobRoleById(

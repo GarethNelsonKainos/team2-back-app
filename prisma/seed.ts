@@ -32,12 +32,12 @@ async function main() {
 		},
 	});
 	console.log("Created Capability:", product_specialist);
-	const low_code_Enigneering = await prisma.capability.create({
+	const low_code_Engineering = await prisma.capability.create({
 		data: {
 			capabilityName: "Low Code Engineering",
 		},
 	});
-	console.log("Created Capability:", low_code_Enigneering);
+	console.log("Created Capability:", low_code_Engineering);
 	//===========================================================
 
 	//==================bands============================
@@ -107,8 +107,9 @@ async function main() {
 			closingDate: new Date("2026-03-01T00:00:00Z"),
 			capabilityId: engineering_capability.capabilityId,
 			bandId: apprentice.bandId,
-			statusId:
-				(await prisma.status.findFirst())?.statusId || "No status recorded",
+			statusId: (
+				await prisma.status.findUniqueOrThrow({ where: { statusName: "Open" } })
+			)?.statusId,
 		},
 	});
 	console.log("Created JobRole:", softwareApprentice);
@@ -127,12 +128,11 @@ async function main() {
 			closingDate: new Date("2026-03-01T00:00:00Z"),
 			capabilityId: testing_and_quality_assurance.capabilityId,
 			bandId: associate.bandId,
-			statusId:
-				(
-					await prisma.status.findUniqueOrThrow({
-						where: { statusName: "Closed" },
-					})
-				)?.statusId || "No status recorded",
+			statusId: (
+				await prisma.status.findUniqueOrThrow({
+					where: { statusName: "Closed" },
+				})
+			)?.statusId,
 		},
 	});
 	console.log("Created JobRole:", testEngAssociate);
@@ -151,12 +151,11 @@ async function main() {
 			closingDate: new Date("2026-03-01T00:00:00Z"),
 			capabilityId: engineering_strategy_and_planning.capabilityId,
 			bandId: apprentice.bandId,
-			statusId:
-				(
-					await prisma.status.findUniqueOrThrow({
-						where: { statusName: "In Progress" },
-					})
-				)?.statusId || "No status recorded",
+			statusId: (
+				await prisma.status.findUniqueOrThrow({
+					where: { statusName: "In Progress" },
+				})
+			)?.statusId,
 		},
 	});
 	console.log("Created JobRole:", innovationLeadConsultant);
@@ -175,8 +174,9 @@ async function main() {
 			closingDate: new Date("2026-03-01T00:00:00Z"),
 			capabilityId: architecture.capabilityId,
 			bandId: consultant.bandId,
-			statusId:
-				(await prisma.status.findFirst())?.statusId || "No status recorded",
+			statusId: (
+				await prisma.status.findUniqueOrThrow({ where: { statusName: "Open" } })
+			)?.statusId,
 		},
 	});
 	console.log("Created JobRole:", technicalArchitect);
@@ -195,8 +195,9 @@ async function main() {
 			closingDate: new Date("2026-03-01T00:00:00Z"),
 			capabilityId: product_specialist.capabilityId,
 			bandId: seniorAssociate.bandId,
-			statusId:
-				(await prisma.status.findFirst())?.statusId || "No status recorded",
+			statusId: (
+				await prisma.status.findUniqueOrThrow({ where: { statusName: "Open" } })
+			)?.statusId,
 		},
 	});
 	console.log("Created JobRole:", seniorProductSpecialist);
@@ -212,10 +213,11 @@ async function main() {
 			sharepointUrl:
 				"https://kainossoftwareltd.sharepoint.com/sites/Career/JobProfiles/Engineering/Job%20profile%20-%20Low%20Code%20Solution%20Architect%20(M)%20.pdf",
 			closingDate: new Date("2026-03-01T00:00:00Z"),
-			capabilityId: low_code_Enigneering.capabilityId,
+			capabilityId: low_code_Engineering.capabilityId,
 			bandId: manager.bandId,
-			statusId:
-				(await prisma.status.findFirst())?.statusId || "No status recorded",
+			statusId: (
+				await prisma.status.findUniqueOrThrow({ where: { statusName: "Open" } })
+			)?.statusId,
 		},
 	});
 	console.log("Created JobRole:", lowCodeSolutionArchitect);

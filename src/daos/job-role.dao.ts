@@ -23,7 +23,7 @@ export class JobRoleDao {
 	}
 
 	async getJobRoleById(id: string): Promise<JobRole | null> {
-		return await prisma.jobRole.findUnique({
+		return prisma.jobRole.findUnique({
 			where: { jobRoleId: id },
 			include: {
 				capability: true,
