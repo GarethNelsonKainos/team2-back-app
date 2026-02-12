@@ -1,5 +1,5 @@
-import type { JobRole } from "../generated/prisma/client";
-import { prisma } from "./prisma";
+import type { JobRole } from "../generated/prisma/client.js";
+import { prisma } from "./prisma.js";
 
 export class JobRoleDao {
 	async getOpenJobRoles(): Promise<JobRole[]> {
