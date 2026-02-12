@@ -28,9 +28,14 @@ describe("JobRoleService", () => {
 				bandName: "Consultant",
 				jobRoles: [],
 			},
-		},
-	];
-
+			status: {
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+				statusName: "Open",
+				jobRoles: [],
+			}
+		}
+		];
+	
 	beforeEach(() => {
 		// Create mock function for DAO method
 		mockGetOpenJobRoles = vi.fn().mockResolvedValue(mockDaoResponse);
@@ -63,6 +68,11 @@ describe("JobRoleService", () => {
 				band: {
 					nameId: "770e8400-e29b-41d4-a716-446655440002",
 					bandName: "Consultant",
+					jobRoles: [],
+				},
+				status: {
+					statusId: "880e8400-e29b-41d4-a716-446655440003",
+					statusName: "Open",
 					jobRoles: [],
 				},
 			});
