@@ -8,6 +8,7 @@ vi.mock("../../src/daos/prisma.js", () => ({
 	prisma: {
 		jobRole: {
 			findMany: vi.fn(),
+			findUnique: vi.fn(),
 		},
 	},
 }));
@@ -37,6 +38,7 @@ describe("JobRoleDao", () => {
 				include: {
 					capability: true,
 					band: true,
+					status: true,
 				},
 			});
 		});
@@ -48,19 +50,14 @@ describe("JobRoleDao", () => {
 					jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
 					roleName: "Software Engineer",
 					location: "Belfast",
+					closingDate: new Date("2026-03-15"),
+					description: null,
+					responsibilities: null,
+					sharepointUrl: null,
+					numberOfOpenPositions: null,
 					capabilityId: "660e8400-e29b-41d4-a716-446655440001",
 					bandId: "770e8400-e29b-41d4-a716-446655440002",
-					closingDate: new Date("2026-03-15"),
-					capability: {
-						capabilityId: "660e8400-e29b-41d4-a716-446655440001",
-						capabilityName: "Engineering",
-						jobRoles: [],
-					},
-					band: {
-						nameId: "770e8400-e29b-41d4-a716-446655440002",
-						bandName: "Consultant",
-						jobRoles: [],
-					},
+					statusId: "880e8400-e29b-41d4-a716-446655440003",
 				},
 			];
 			mockFindMany.mockResolvedValue(mockJobRoles);
@@ -95,6 +92,64 @@ describe("JobRoleDao", () => {
 			await expect(dao.getOpenJobRoles()).rejects.toThrow(
 				"Database connection failed",
 			);
+		});
+	});
+	describe("getJobRoleById", () => {
+		it("should call prisma.jobRole.findUnique with correct parameters", async () => {
+			// Arrange
+			const mockJobRole: JobRole = {
+				jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+				roleName: "Software Engineer",
+				location: "Belfast",
+				closingDate: new Date("2026-03-15"),
+				description: null,
+				responsibilities: null,
+				sharepointUrl: null,
+				numberOfOpenPositions: null,
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				bandId: "770e8400-e29b-41d4-a716-446655440002",
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+			};
+			vi.mocked(prisma.jobRole.findUnique).mockResolvedValue(mockJobRole);
+
+			// Act
+			const result = await dao.getJobRoleById(
+				"550e8400-e29b-41d4-a716-446655440000",
+			);
+
+			// Assert
+			expect(prisma.jobRole.findUnique).toHaveBeenCalledOnce();
+			expect(prisma.jobRole.findUnique).toHaveBeenCalledWith({
+				where: { jobRoleId: "550e8400-e29b-41d4-a716-446655440000" },
+				include: {
+					capability: true,
+					band: true,
+					status: true,
+				},
+			});
+			expect(result).toEqual(mockJobRole);
+		});
+
+		it("should return null when job role does not exist", async () => {
+			// Arrange
+			vi.mocked(prisma.jobRole.findUnique).mockResolvedValue(null);
+
+			// Act
+			const result = await dao.getJobRoleById("non-existent-id");
+
+			// Assert
+			expect(result).toBeNull();
+		});
+
+		it("should propagate errors from prisma", async () => {
+			// Arrange
+			const dbError = new Error("Database connection failed");
+			vi.mocked(prisma.jobRole.findUnique).mockRejectedValue(dbError);
+
+			// Act & Assert
+			await expect(
+				dao.getJobRoleById("550e8400-e29b-41d4-a716-446655440000"),
+			).rejects.toThrow("Database connection failed");
 		});
 	});
 });
