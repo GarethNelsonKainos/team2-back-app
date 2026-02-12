@@ -16,7 +16,10 @@ export class JobRoleController {
 		}
 	}
 
-	async getJobRoleById(req: Request<JobRoleParams>, res: Response): Promise<void> {
+	async getJobRoleById(
+		req: Request<JobRoleParams>,
+		res: Response,
+	): Promise<void> {
 		const { id } = req.params;
 		try {
 			const jobRole = await this.jobRoleService.getJobRoleById(id);

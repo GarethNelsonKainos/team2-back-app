@@ -92,7 +92,7 @@ describe("JobRole Routes - Integration Tests", () => {
 		// Mock at the DAO level - let service and mapper run with real code
 		getOpenJobRolesSpy = vi
 			.spyOn(JobRoleDao.prototype, "getOpenJobRoles")
-			.mockResolvedValue(mockDaoResponse);
+			.mockResolvedValue(mockDaoResponse as any);
 	});
 
 	afterEach(() => {
