@@ -1,11 +1,3 @@
-/*
-  Warnings:
-
-  - Added the required column `statusId` to the `JobRole` table without a default value. This is not possible if the table is not empty.
-
-*/
-
-
 -- CreateTable
 CREATE TABLE "Status" (
     "statusId" TEXT NOT NULL,
@@ -22,7 +14,7 @@ INSERT INTO "Status" ("statusId", "statusName") VALUES (gen_random_uuid(), 'Clos
 INSERT INTO "Status" ("statusId", "statusName") VALUES (gen_random_uuid(), 'In Progress');
 
 -- AlterTable
-ALTER TABLE "JobRole" ADD COLUMN "statusId" TEXT NOT NULL, ADD COLUMN "description" TEXT NULL, ADD COLUMN "responsibilities" TEXT NULL, ADD COLUMN "sharepointUrl" TEXT NULL, ADD COLUMN "numberOfOpenPositions" INT NULL;
+ALTER TABLE "JobRole" ADD COLUMN "statusId" TEXT NULL, ADD COLUMN "description" TEXT NULL, ADD COLUMN "responsibilities" TEXT NULL, ADD COLUMN "sharepointUrl" TEXT NULL, ADD COLUMN "numberOfOpenPositions" INT NULL;
 
 
 -- AddForeignKey
