@@ -1,6 +1,57 @@
-import { prisma } from "../src/daos/prisma";
+import { prisma } from "../src/daos/prisma.js";
+import argon2 from "argon2";
 
 async function main() {
+	//================== users ============================
+
+	// Hash password with Argon2
+	const hashedPassword = await argon2.hash("password123");
+
+	// Create admin user
+	const admin = await prisma.user.upsert({
+		where: { email: "admin@test.com" },
+		update: {},
+		create: {
+			email: "admin@test.com",
+			firstName: "Admin",
+			secondName: "User",
+			password: hashedPassword,
+			role: "admin",
+		},
+	});
+	console.log("Created User:", admin);
+
+	// Create regular user
+	const regularUser = await prisma.user.upsert({
+		where: { email: "user@test.com" },
+		update: {},
+		create: {
+			email: "user@test.com",
+			firstName: "Test",
+			secondName: "User",
+			password: hashedPassword,
+			role: "user",
+		},
+	});
+	console.log("Created User:", regularUser);
+
+	// Create another test user
+	const johnDoe = await prisma.user.upsert({
+		where: { email: "john.doe@test.com" },
+		update: {},
+		create: {
+			email: "john.doe@test.com",
+			firstName: "John",
+			secondName: "Doe",
+			password: hashedPassword,
+			role: "user",
+		},
+	});
+	console.log("Created User:", johnDoe);
+
+	console.log("✅ All users created with password: password123");
+
+	//===========================================================
 	//==================capabilities============================
 	const engineering_capability = await prisma.capability.create({
 		data: {

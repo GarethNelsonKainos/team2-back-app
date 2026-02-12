@@ -54,3 +54,14 @@ model JobRole {
   statusId     String
   status       Status     @relation(fields: [statusId], references: [statusId])
 }
+
+model User {
+  userId    String   @id @default(uuid())
+  email     String   @unique
+  firstName String
+  secondName String
+  password  String
+  role      String   @default("user")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
