@@ -128,7 +128,6 @@ describe("JobRole Routes - Integration Tests", () => {
 		},
 	];
 
-
 	beforeEach(() => {
 		// Mock at the DAO level - let service and mapper run with real code
 		getOpenJobRolesSpy = vi
@@ -180,12 +179,14 @@ describe("JobRole Routes - Integration Tests", () => {
 			expect(response.status).toBe(500);
 		});
 	});
-	
+
 	describe("GET /job-roles/:id", () => {
 		it("should return 200 with job role data when role exists", async () => {
 			const app = buildApp();
 
-			const response = await request(app).get("/job-roles/550e8400-e29b-41d4-a716-446655440000");
+			const response = await request(app).get(
+				"/job-roles/550e8400-e29b-41d4-a716-446655440000",
+			);
 
 			expect(response.status).toBe(200);
 			expect(response.body).toEqual(expectedResponse[0]);
@@ -204,7 +205,9 @@ describe("JobRole Routes - Integration Tests", () => {
 			getJobRoleByIdSpy.mockRejectedValueOnce(new Error("Database error"));
 			const app = buildApp();
 
-			const response = await request(app).get("/job-roles/550e8400-e29b-41d4-a716-446655440000");
+			const response = await request(app).get(
+				"/job-roles/550e8400-e29b-41d4-a716-446655440000",
+			);
 
 			expect(response.status).toBe(500);
 		});

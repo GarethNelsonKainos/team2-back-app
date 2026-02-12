@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { JobRoleDao } from "../../src/daos/job-role.dao.js";
 import { prisma } from "../../src/daos/prisma.js";
 import type { JobRole } from "../../src/generated/prisma/client.js";
-import { stat } from "node:fs";
 
 // Mock the Prisma client
 vi.mock("../../src/daos/prisma.js", () => ({
@@ -136,9 +135,7 @@ describe("JobRoleDao", () => {
 			vi.mocked(prisma.jobRole.findUnique).mockResolvedValue(null);
 
 			// Act
-			const result = await dao.getJobRoleById(
-				"non-existent-id",
-			);
+			const result = await dao.getJobRoleById("non-existent-id");
 
 			// Assert
 			expect(result).toBeNull();

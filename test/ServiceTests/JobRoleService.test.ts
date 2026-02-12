@@ -32,10 +32,10 @@ describe("JobRoleService", () => {
 				statusId: "880e8400-e29b-41d4-a716-446655440003",
 				statusName: "Open",
 				jobRoles: [],
-			}
-		}
-		];
-	
+			},
+		},
+	];
+
 	beforeEach(() => {
 		// Create mock function for DAO method
 		mockGetOpenJobRoles = vi.fn().mockResolvedValue(mockDaoResponse);
