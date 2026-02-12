@@ -1,4 +1,4 @@
-import { prisma } from "../src/daos/prisma";
+import { prisma } from "../src/daos/prisma.js";
 import argon2 from "argon2";
 
 async function main() {
