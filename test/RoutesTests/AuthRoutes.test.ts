@@ -7,10 +7,10 @@ import argon2 from "argon2";
 
 // Mock argon2 at the top level
 vi.mock("argon2", () => ({
-    default: {
-        hash: vi.fn(),
-        verify: vi.fn(),
-    },
+	default: {
+		hash: vi.fn(),
+		verify: vi.fn(),
+	},
 }));
 
 describe("Auth Routes - Integration Tests", () => {
