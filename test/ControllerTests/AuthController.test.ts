@@ -189,9 +189,9 @@ describe("AuthController", () => {
 			await controller.login(mockRequest as Request, mockResponse as Response);
 
 			// Assert
-			expect(mockResponse.status).toHaveBeenCalledWith(401);
+			expect(mockResponse.status).toHaveBeenCalledWith(500);
 			expect(mockResponse.json).toHaveBeenCalledWith({
-				error: "Invalid credentials",
+				error: "Internal server error",
 			});
 		});
 

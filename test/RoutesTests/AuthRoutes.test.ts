@@ -167,7 +167,7 @@ describe("Auth Routes - Integration Tests", () => {
 			});
 		});
 
-		it("should return 401 when DAO throws an error", async () => {
+		it("should return 500 when DAO throws an error", async () => {
 			// Arrange
 			findUserByEmailSpy.mockRejectedValue(new Error("Database error"));
 
@@ -178,9 +178,9 @@ describe("Auth Routes - Integration Tests", () => {
 			});
 
 			// Assert
-			expect(response.status).toBe(401);
+			expect(response.status).toBe(500);
 			expect(response.body).toEqual({
-				error: "Invalid credentials",
+				error: "Internal server error",
 			});
 		});
 
