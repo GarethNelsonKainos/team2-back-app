@@ -128,9 +128,11 @@ async function main() {
 			capabilityId: testing_and_quality_assurance.capabilityId,
 			bandId: associate.bandId,
 			statusId:
-				(await prisma.status.findUniqueOrThrow({
-					where: { statusName: "Closed" },
-				}))?.statusId || "No status recorded",
+				(
+					await prisma.status.findUniqueOrThrow({
+						where: { statusName: "Closed" },
+					})
+				)?.statusId || "No status recorded",
 		},
 	});
 	console.log("Created JobRole:", testEngAssociate);
@@ -150,9 +152,11 @@ async function main() {
 			capabilityId: engineering_strategy_and_planning.capabilityId,
 			bandId: apprentice.bandId,
 			statusId:
-				(await prisma.status.findUniqueOrThrow({
-					where: { statusName: "In Progress" },
-				}))?.statusId || "No status recorded",
+				(
+					await prisma.status.findUniqueOrThrow({
+						where: { statusName: "In Progress" },
+					})
+				)?.statusId || "No status recorded",
 		},
 	});
 	console.log("Created JobRole:", innovationLeadConsultant);
