@@ -12,5 +12,4 @@ router.get(
 	"/job-roles/:id",
 	jobRoleController.getJobRoleById.bind(jobRoleController),
 );
-
 export default router;
