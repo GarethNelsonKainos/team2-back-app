@@ -43,7 +43,7 @@ jobs:
           env:
             DATABASE_URL: "postgresql://dummy:dummy@localhost/dummy"
             JWT_SECRET: "test-secret-key-for-ci-testing-minimum-32-chars"
-            JWT_EXPIRES: "24h"
+            JWT_EXPIRES_IN: "24h"
           run: npm run test:coverage
     
     build:

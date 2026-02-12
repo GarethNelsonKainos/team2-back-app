@@ -28,7 +28,16 @@ export class AuthController {
 			res.status(200).json(result);
 		} catch (error) {
 			console.error("Login error:", error);
-			res.status(401).json({ error: "Invalid credentials" });
+
+			const isAuthError =
+				error instanceof Error &&
+				(error.name === "AuthError" || error.message === "Invalid credentials");
+
+			if (isAuthError) {
+				res.status(401).json({ error: "Invalid credentials" });
+			} else {
+				res.status(500).json({ error: "Internal server error" });
+			}
 		}
 	}
 }
