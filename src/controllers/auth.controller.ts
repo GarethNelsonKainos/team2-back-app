@@ -40,4 +40,62 @@ export class AuthController {
 			}
 		}
 	}
+
+	async register(req: Request, res: Response): Promise<void> {
+		try {
+			const { email, firstName, secondName, password, confirmedPassword } =
+				req.body;
+
+			// Validate request body - all fields are required
+			if (
+				!email ||
+				!firstName ||
+				!secondName ||
+				!password ||
+				!confirmedPassword
+			) {
+				res.status(400).json({
+					error:
+						"All fields are required: email, firstName, secondName, password, confirmedPassword",
+				});
+				return;
+			}
+
+			// Email format validation
+			const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+			if (!emailRegex.test(email)) {
+				res.status(400).json({ error: "Invalid email format" });
+				return;
+			}
+
+			// Attempt registration
+			const result = await this.authService.register({
+				email,
+				firstName,
+				secondName,
+				password,
+				confirmedPassword,
+			});
+
+			res.status(201).json(result);
+		} catch (error) {
+			console.error("Registration error:", error);
+
+			if (error instanceof Error) {
+				// Handle specific error cases
+				if (error.message === "User with this email already exists") {
+					res.status(409).json({ error: error.message });
+				} else if (
+					error.message === "Passwords do not match" ||
+					error.message.includes("Password must be")
+				) {
+					res.status(400).json({ error: error.message });
+				} else {
+					res.status(500).json({ error: "Internal server error" });
+				}
+			} else {
+				res.status(500).json({ error: "Internal server error" });
+			}
+		}
+	}
 }

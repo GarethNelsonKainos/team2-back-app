@@ -225,4 +225,335 @@ describe("Auth Routes - Integration Tests", () => {
 			expect(response.body).toHaveProperty("token");
 		});
 	});
+
+	describe("POST /api/register", () => {
+		let createUserSpy: ReturnType<typeof vi.spyOn>;
+
+		beforeEach(() => {
+			// Mock createUser for registration tests
+			createUserSpy = vi.spyOn(AuthDao.prototype, "createUser");
+		});
+
+		it("should return 201 with token for successful registration", async () => {
+			// Arrange
+			findUserByEmailSpy.mockResolvedValue(null); // User doesn't exist
+			createUserSpy.mockResolvedValue({
+				userId: "123e4567-e89b-12d3-a456-426614174000",
+				email: "newuser@test.com",
+				firstName: "New",
+				secondName: "User",
+				password: "hashed_password123",
+				role: "user",
+				createdAt: new Date("2026-02-16T00:00:00Z"),
+				updatedAt: new Date("2026-02-16T00:00:00Z"),
+			});
+
+			// Act
+			const response = await request(app).post("/api/register").send({
+				email: "newuser@test.com",
+				firstName: "New",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			});
+
+			// Assert
+			expect(response.status).toBe(201);
+			expect(response.body).toHaveProperty("token");
+			expect(typeof response.body.token).toBe("string");
+		});
+
+		it("should call DAO methods with correct parameters", async () => {
+			// Arrange
+			findUserByEmailSpy.mockResolvedValue(null);
+			createUserSpy.mockResolvedValue({
+				userId: "123",
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "hashed",
+				role: "user",
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			});
+
+			// Act
+			await request(app).post("/api/register").send({
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			});
+
+			// Assert
+			expect(findUserByEmailSpy).toHaveBeenCalledWith("test@test.com");
+			expect(createUserSpy).toHaveBeenCalledOnce();
+			expect(createUserSpy).toHaveBeenCalledWith(
+				expect.objectContaining({
+					email: "test@test.com",
+					firstName: "Test",
+					secondName: "User",
+				}),
+			);
+		});
+
+		it("should return 400 when email is missing", async () => {
+			// Act
+			const response = await request(app).post("/api/register").send({
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			});
+
+			// Assert
+			expect(response.status).toBe(400);
+			expect(response.body).toEqual({
+				error:
+					"All fields are required: email, firstName, secondName, password, confirmedPassword",
+			});
+		});
+
+		it("should return 400 when firstName is missing", async () => {
+			// Act
+			const response = await request(app).post("/api/register").send({
+				email: "test@test.com",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			});
+
+			// Assert
+			expect(response.status).toBe(400);
+			expect(response.body.error).toContain("All fields are required");
+		});
+
+		it("should return 400 when secondName is missing", async () => {
+			// Act
+			const response = await request(app).post("/api/register").send({
+				email: "test@test.com",
+				firstName: "Test",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			});
+
+			// Assert
+			expect(response.status).toBe(400);
+			expect(response.body.error).toContain("All fields are required");
+		});
+
+		it("should return 400 when password is missing", async () => {
+			// Act
+			const response = await request(app).post("/api/register").send({
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				confirmedPassword: "SecurePass123!",
+			});
+
+			// Assert
+			expect(response.status).toBe(400);
+			expect(response.body.error).toContain("All fields are required");
+		});
+
+		it("should return 400 when confirmedPassword is missing", async () => {
+			// Act
+			const response = await request(app).post("/api/register").send({
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+			});
+
+			// Assert
+			expect(response.status).toBe(400);
+			expect(response.body.error).toContain("All fields are required");
+		});
+
+		it("should return 400 for invalid email format", async () => {
+			// Act
+			const response = await request(app).post("/api/register").send({
+				email: "notanemail",
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			});
+
+			// Assert
+			expect(response.status).toBe(400);
+			expect(response.body).toEqual({ error: "Invalid email format" });
+		});
+
+		it("should return 400 when passwords do not match", async () => {
+			// Arrange
+			findUserByEmailSpy.mockResolvedValue(null);
+
+			// Act
+			const response = await request(app).post("/api/register").send({
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "DifferentPass123!",
+			});
+
+			// Assert
+			expect(response.status).toBe(400);
+			expect(response.body).toEqual({ error: "Passwords do not match" });
+		});
+
+		it("should return 400 for weak password (too short)", async () => {
+			// Arrange
+			findUserByEmailSpy.mockResolvedValue(null);
+
+			// Act
+			const response = await request(app).post("/api/register").send({
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "Short1!",
+				confirmedPassword: "Short1!",
+			});
+
+			// Assert
+			expect(response.status).toBe(400);
+			expect(response.body.error).toContain(
+				"Password must be more than 8 characters",
+			);
+		});
+
+		it("should return 400 for password without uppercase", async () => {
+			// Arrange
+			findUserByEmailSpy.mockResolvedValue(null);
+
+			// Act
+			const response = await request(app).post("/api/register").send({
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "lowercase123!",
+				confirmedPassword: "lowercase123!",
+			});
+
+			// Assert
+			expect(response.status).toBe(400);
+			expect(response.body.error).toContain("uppercase");
+		});
+
+		it("should return 400 for password without lowercase", async () => {
+			// Arrange
+			findUserByEmailSpy.mockResolvedValue(null);
+
+			// Act
+			const response = await request(app).post("/api/register").send({
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "UPPERCASE123!",
+				confirmedPassword: "UPPERCASE123!",
+			});
+
+			// Assert
+			expect(response.status).toBe(400);
+			expect(response.body.error).toContain("lowercase");
+		});
+
+		it("should return 400 for password without special character", async () => {
+			// Arrange
+			findUserByEmailSpy.mockResolvedValue(null);
+
+			// Act
+			const response = await request(app).post("/api/register").send({
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "NoSpecialChar123",
+				confirmedPassword: "NoSpecialChar123",
+			});
+
+			// Assert
+			expect(response.status).toBe(400);
+			expect(response.body.error).toContain("special");
+		});
+
+		it("should return 409 when user already exists", async () => {
+			// Arrange
+			findUserByEmailSpy.mockResolvedValue(mockUser); // User exists
+
+			// Act
+			const response = await request(app).post("/api/register").send({
+				email: "admin@test.com",
+				firstName: "Admin",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			});
+
+			// Assert
+			expect(response.status).toBe(409);
+			expect(response.body).toEqual({
+				error: "User with this email already exists",
+			});
+		});
+
+		it("should hash password before storing", async () => {
+			// Arrange
+			findUserByEmailSpy.mockResolvedValue(null);
+			createUserSpy.mockResolvedValue({
+				userId: "123",
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "hashed",
+				role: "user",
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			});
+
+			// Act
+			await request(app).post("/api/register").send({
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			});
+
+			// Assert
+			expect(argon2.hash).toHaveBeenCalledWith("SecurePass123!");
+			const createCall = createUserSpy.mock.calls[0][0];
+			expect(createCall.password).not.toBe("SecurePass123!");
+		});
+
+		it("should create user with role defaulting to 'user'", async () => {
+			// Arrange
+			findUserByEmailSpy.mockResolvedValue(null);
+			const newUser = {
+				userId: "123",
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "hashed",
+				role: "user",
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			};
+			createUserSpy.mockResolvedValue(newUser);
+
+			// Act
+			const response = await request(app).post("/api/register").send({
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			});
+
+			// Assert
+			expect(response.status).toBe(201);
+			expect(response.body.token).toBeDefined();
+		});
+	});
 });

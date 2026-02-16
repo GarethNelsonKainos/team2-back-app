@@ -40,4 +40,63 @@ export class AuthService {
 
 		return { token };
 	}
+
+	async register(userData: {
+		email: string;
+		firstName: string;
+		secondName: string;
+		password: string;
+		confirmedPassword: string;
+	}): Promise<{ token: string }> {
+		// Check if passwords match
+		if (userData.password !== userData.confirmedPassword) {
+			throw new Error("Passwords do not match");
+		}
+
+		// Validate password format: more than 8 chars with upper, lower and special char
+		const passwordRegex =
+			/^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).{9,}$/;
+		if (!passwordRegex.test(userData.password)) {
+			throw new Error(
+				"Password must be more than 8 characters and contain uppercase, lowercase, and special characters",
+			);
+		}
+
+		// Check if user already exists
+		const existingUser = await this.authDao.findUserByEmail(userData.email);
+		if (existingUser) {
+			throw new Error("User with this email already exists");
+		}
+
+		// Hash the password with Argon2
+		const hashedPassword = await argon2.hash(userData.password);
+
+		// Create the user
+		const newUser = await this.authDao.createUser({
+			email: userData.email,
+			firstName: userData.firstName,
+			secondName: userData.secondName,
+			password: hashedPassword,
+		});
+
+		// Generate a JWT token
+		const secret = process.env.JWT_SECRET;
+		if (!secret) {
+			throw new Error("JWT_SECRET environment variable is not defined");
+		}
+
+		const token = jwt.sign(
+			{
+				userId: newUser.userId,
+				firstName: newUser.firstName,
+				secondName: newUser.secondName,
+				email: newUser.email,
+				role: newUser.role,
+			},
+			secret,
+			{ expiresIn: process.env.JWT_EXPIRES_IN || "24h" } as SignOptions,
+		);
+
+		return { token };
+	}
 }
