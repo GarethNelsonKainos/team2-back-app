@@ -5,7 +5,9 @@ import { ApplicationService } from "../../src/services/application.service.js";
 
 vi.mock("../../src/services/application.service.js");
 
-function createMockFile(overrides?: Partial<Express.Multer.File>): Express.Multer.File {
+function createMockFile(
+	overrides?: Partial<Express.Multer.File>,
+): Express.Multer.File {
 	return {
 		fieldname: "CV",
 		originalname: "resume.pdf",

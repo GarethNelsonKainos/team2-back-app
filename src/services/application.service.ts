@@ -35,8 +35,9 @@ export class ApplicationService {
 			...applicationData,
 			cvUrl,
 		};
-		const application =
-			await this.applicationDao.createApplication(applicationDataWithUrl);
+		const application = await this.applicationDao.createApplication(
+			applicationDataWithUrl,
+		);
 
 		return application;
 	}

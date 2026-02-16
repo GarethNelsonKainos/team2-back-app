@@ -46,16 +46,15 @@ export class ApplicationController {
 		}
 
 		try {
-			const application =
-				await this.applicationService.createApplication(applicationData, file);
+			const application = await this.applicationService.createApplication(
+				applicationData,
+				file,
+			);
 			res.status(201).json(application);
 		} catch (error) {
 			console.error("Error creating application:", error);
 			res.status(500).json({
-				error:
-					error instanceof Error
-						? error.message
-						: "Internal server error",
+				error: error instanceof Error ? error.message : "Internal server error",
 			});
 		}
 	}

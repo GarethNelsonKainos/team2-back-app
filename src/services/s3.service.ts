@@ -47,10 +47,7 @@ export class S3Service {
 		}
 	}
 
-	generateFileKey(
-		originalFilename: string,
-		applicationId?: string,
-	): string {
+	generateFileKey(originalFilename: string, applicationId?: string): string {
 		// Generate a unique file key: applications/{applicationId}/{timestamp}_{originalFilename}
 		// If no applicationId provided yet, use a unique identifier
 		const timestamp = Date.now();

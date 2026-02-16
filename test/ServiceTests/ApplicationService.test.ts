@@ -223,7 +223,7 @@ describe("ApplicationService", () => {
 					"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 				buffer: Buffer.from("DOCX content"),
 				size: 512,
-			}as Express.Multer.File;
+			} as Express.Multer.File;
 
 			const applicationData = {
 				userId: "user-456",
