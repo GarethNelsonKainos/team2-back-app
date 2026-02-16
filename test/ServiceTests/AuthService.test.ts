@@ -180,7 +180,7 @@ describe("AuthService", () => {
 
 			// Act & Assert
 			await expect(authService.register(userData)).rejects.toThrow(
-				"Password must be more than 8 characters and contain uppercase, lowercase, and special characters",
+				"Password must contain uppercase letters",
 			);
 			expect(mockCreateUser).not.toHaveBeenCalled();
 		});
@@ -197,7 +197,7 @@ describe("AuthService", () => {
 
 			// Act & Assert
 			await expect(authService.register(userData)).rejects.toThrow(
-				"Password must be more than 8 characters and contain uppercase, lowercase, and special characters",
+				"Password must contain lowercase letters",
 			);
 			expect(mockCreateUser).not.toHaveBeenCalled();
 		});
@@ -214,7 +214,7 @@ describe("AuthService", () => {
 
 			// Act & Assert
 			await expect(authService.register(userData)).rejects.toThrow(
-				"Password must be more than 8 characters and contain uppercase, lowercase, and special characters",
+				"Password must contain special characters",
 			);
 			expect(mockCreateUser).not.toHaveBeenCalled();
 		});

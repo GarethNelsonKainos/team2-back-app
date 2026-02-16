@@ -87,7 +87,7 @@ export class AuthController {
 					res.status(409).json({ error: error.message });
 				} else if (
 					error.message === "Passwords do not match" ||
-					error.message.includes("Password must be")
+					error.message.includes("Password must")
 				) {
 					res.status(400).json({ error: error.message });
 				} else {
