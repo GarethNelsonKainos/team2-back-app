@@ -2,144 +2,148 @@ import { prisma } from "../src/daos/prisma.js";
 import argon2 from "argon2";
 
 async function main() {
+
+	try {
 	//================== users ============================
+		// Hash password with Argon2
+		const hashedPassword = await argon2.hash("password123");
 
-	// Hash password with Argon2
-	const hashedPassword = await argon2.hash("password123");
+		// Create admin user
+		const admin = await prisma.user.upsert({
+			where: { email: "admin@test.com" },
+			update: {},
+			create: {
+				email: "admin@test.com",
+				firstName: "Admin",
+				secondName: "User",
+				password: hashedPassword,
+				role: "admin",
+			},
+		});
+		console.log("Created User:", admin);
 
-	// Create admin user
-	const admin = await prisma.user.upsert({
-		where: { email: "admin@test.com" },
-		update: {},
-		create: {
-			email: "admin@test.com",
-			firstName: "Admin",
-			secondName: "User",
-			password: hashedPassword,
-			role: "admin",
-		},
-	});
-	console.log("Created User:", admin);
+		// Create regular user
+		const regularUser = await prisma.user.upsert({
+			where: { email: "user@test.com" },
+			update: {},
+			create: {
+				email: "user@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: hashedPassword,
+				role: "user",
+			},
+		});
+		console.log("Created User:", regularUser);
 
-	// Create regular user
-	const regularUser = await prisma.user.upsert({
-		where: { email: "user@test.com" },
-		update: {},
-		create: {
-			email: "user@test.com",
-			firstName: "Test",
-			secondName: "User",
-			password: hashedPassword,
-			role: "user",
-		},
-	});
-	console.log("Created User:", regularUser);
+		// Create another test user
+		const johnDoe = await prisma.user.upsert({
+			where: { email: "john.doe@test.com" },
+			update: {},
+			create: {
+				email: "john.doe@test.com",
+				firstName: "John",
+				secondName: "Doe",
+				password: hashedPassword,
+				role: "user",
+			},
+		});
+		console.log("Created User:", johnDoe);
 
-	// Create another test user
-	const johnDoe = await prisma.user.upsert({
-		where: { email: "john.doe@test.com" },
-		update: {},
-		create: {
-			email: "john.doe@test.com",
-			firstName: "John",
-			secondName: "Doe",
-			password: hashedPassword,
-			role: "user",
-		},
-	});
-	console.log("Created User:", johnDoe);
+		console.log("✅ All users created with password: password123");
 
-	console.log("✅ All users created with password: password123");
-
+	
 	//===========================================================
 	//==================capabilities============================
-	const engineering_capability = await prisma.capability.create({
-		data: {
-			capabilityName: "Engineering",
-		},
-	});
-	console.log("Created Capability:", engineering_capability);
-	const engineering_strategy_and_planning = await prisma.capability.create({
-		data: {
-			capabilityName: "Engineering Strategy and Planning",
-		},
-	});
-	console.log("Created Capability:", engineering_strategy_and_planning);
-	const architecture = await prisma.capability.create({
-		data: {
-			capabilityName: "Architecture",
-		},
-	});
-	console.log("Created Capability:", architecture);
-	const testing_and_quality_assurance = await prisma.capability.create({
-		data: {
-			capabilityName: "Testing and Quality Assurance",
-		},
-	});
-	console.log("Created Capability:", testing_and_quality_assurance);
-	const product_specialist = await prisma.capability.create({
-		data: {
-			capabilityName: "Product Specialist",
-		},
-	});
-	console.log("Created Capability:", product_specialist);
-	const low_code_Engineering = await prisma.capability.create({
-		data: {
-			capabilityName: "Low Code Engineering",
-		},
-	});
-	console.log("Created Capability:", low_code_Engineering);
-	//===========================================================
 
+		const engineering_capability = await prisma.capability.create({
+			data: {
+				capabilityName: "Engineering",
+			},
+		});
+		console.log("Created Capability:", engineering_capability);
+		const engineering_strategy_and_planning = await prisma.capability.create({
+			data: {
+				capabilityName: "Engineering Strategy and Planning",
+			},
+		});
+		console.log("Created Capability:", engineering_strategy_and_planning);
+		const architecture = await prisma.capability.create({
+			data: {
+				capabilityName: "Architecture",
+			},
+		});
+		console.log("Created Capability:", architecture);
+		const testing_and_quality_assurance = await prisma.capability.create({
+			data: {
+				capabilityName: "Testing and Quality Assurance",
+			},
+		});
+		console.log("Created Capability:", testing_and_quality_assurance);
+		const product_specialist = await prisma.capability.create({
+			data: {
+				capabilityName: "Product Specialist",
+			},
+		});
+		console.log("Created Capability:", product_specialist);
+		const low_code_Engineering = await prisma.capability.create({
+			data: {
+				capabilityName: "Low Code Engineering",
+			},
+		});
+		console.log("Created Capability:", low_code_Engineering);
+	
+	//===========================================================	
 	//==================bands============================
-	const apprentice = await prisma.band.create({
-		data: {
-			bandName: "Apprentice",
-		},
-	});
-	console.log("Created Band:", apprentice);
-	const trainee = await prisma.band.create({
-		data: {
-			bandName: "Trainee",
-		},
-	});
-	console.log("Created Band:", trainee);
-	const associate = await prisma.band.create({
-		data: {
-			bandName: "Associate",
-		},
-	});
-	console.log("Created Band:", associate);
-	const seniorAssociate = await prisma.band.create({
-		data: {
-			bandName: "Senior Associate",
-		},
-	});
-	console.log("Created Band:", seniorAssociate);
-	const consultant = await prisma.band.create({
-		data: {
-			bandName: "Consultant",
-		},
-	});
-	console.log("Created Band:", consultant);
-	const manager = await prisma.band.create({
-		data: {
-			bandName: "Manager",
-		},
-	});
-	console.log("Created Band:", manager);
-	const principal = await prisma.band.create({
-		data: {
-			bandName: "Principal",
-		},
-	});
-	console.log("Created Band:", principal);
-	const leadershipCommunity = await prisma.band.create({
-		data: {
-			bandName: "Leadership Community",
-		},
-	});
-	console.log("Created Band:", leadershipCommunity);
+		 const apprentice = await prisma.band.create({
+			data: {
+				bandName: "Apprentice",
+			},
+		});
+		console.log("Created Band:", apprentice);
+		const trainee = await prisma.band.create({
+			data: {
+				bandName: "Trainee",
+			},
+		});
+		console.log("Created Band:", trainee);
+		const associate = await prisma.band.create({
+			data: {
+				bandName: "Associate",
+			},
+		});
+		console.log("Created Band:", associate);
+		const seniorAssociate = await prisma.band.create({
+			data: {
+				bandName: "Senior Associate",
+			},
+		});
+		console.log("Created Band:", seniorAssociate);
+		const consultant = await prisma.band.create({
+			data: {
+				bandName: "Consultant",
+			},
+		});
+		console.log("Created Band:", consultant);
+		const manager = await prisma.band.create({
+			data: {
+				bandName: "Manager",
+			},
+		});
+		console.log("Created Band:", manager);
+		const principal = await prisma.band.create({
+			data: {
+				bandName: "Principal",
+			},
+		});
+		console.log("Created Band:", principal);
+		const leadershipCommunity = await prisma.band.create({
+			data: {
+				bandName: "Leadership Community",
+			},
+		});
+		console.log("Created Band:", leadershipCommunity);
+	
 	//===========================================================
 
 	//==================job roles============================
@@ -272,7 +276,38 @@ async function main() {
 		},
 	});
 	console.log("Created JobRole:", lowCodeSolutionArchitect);
+	}catch(error) {
+		console.error("Error creating job roles:", error);
+	}
 	//===========================================================
+
+	//================== applications ============================
+	const application1 = await prisma.applications.create({
+		data: {
+			userId: (await prisma.user.findUniqueOrThrow({ where: { email: "user@test.com" } })).userId,
+			jobRoleId: (await prisma.jobRole.findMany({ where: { roleName: "Software Engineer" } }))[0].jobRoleId,
+			cvUrl: "https://example.com/cv1.pdf",
+		},
+	});
+	console.log("Created Application:", application1);
+
+	const application2 = await prisma.applications.create({
+		data: {
+			userId: (await prisma.user.findUniqueOrThrow({ where: { email: "user@test.com" } })).userId,
+			jobRoleId: (await prisma.jobRole.findMany({ where: { roleName: "Test Engineer" } }))[0].jobRoleId,
+			cvUrl: "https://example.com/cv2.pdf",
+		},
+	});
+	console.log("Created Application:", application2);
+
+	const application3 = await prisma.applications.create({
+		data: {
+			userId: (await prisma.user.findUniqueOrThrow({ where: { email: "john.doe@test.com" } })).userId,
+			jobRoleId: (await prisma.jobRole.findMany({ where: { roleName: "Innovation Lead" } }))[0].jobRoleId,
+			cvUrl: "https://example.com/cv3.pdf",
+		},
+	});
+	console.log("Created Application:", application3);
 }
 
 main()
