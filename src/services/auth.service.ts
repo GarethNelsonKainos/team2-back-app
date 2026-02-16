@@ -5,6 +5,32 @@ import { AuthDao } from "../daos/auth.dao.js";
 export class AuthService {
 	private authDao: AuthDao = new AuthDao();
 
+	private validatePassword(password: string): void {
+		if (password.length < 9) {
+			throw new Error(
+				"Password must be more than 8 characters and contain uppercase, lowercase, and special characters",
+			);
+		}
+
+		if (!/[a-z]/.test(password)) {
+			throw new Error(
+				"Password must be more than 8 characters and contain uppercase, lowercase, and special characters",
+			);
+		}
+
+		if (!/[A-Z]/.test(password)) {
+			throw new Error(
+				"Password must be more than 8 characters and contain uppercase, lowercase, and special characters",
+			);
+		}
+
+		if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+			throw new Error(
+				"Password must be more than 8 characters and contain uppercase, lowercase, and special characters",
+			);
+		}
+	}
+
 	async login(email: string, password: string): Promise<{ token: string }> {
 		// Find the user by email
 		const user = await this.authDao.findUserByEmail(email);
@@ -53,14 +79,8 @@ export class AuthService {
 			throw new Error("Passwords do not match");
 		}
 
-		// Validate password format: more than 8 chars with upper, lower and special char
-		const passwordRegex =
-			/^(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).{9,}$/;
-		if (!passwordRegex.test(userData.password)) {
-			throw new Error(
-				"Password must be more than 8 characters and contain uppercase, lowercase, and special characters",
-			);
-		}
+		// Validate password format
+		this.validatePassword(userData.password);
 
 		// Check if user already exists
 		const existingUser = await this.authDao.findUserByEmail(userData.email);
