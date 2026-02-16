@@ -7,27 +7,19 @@ export class AuthService {
 
 	private validatePassword(password: string): void {
 		if (password.length < 9) {
-			throw new Error(
-				"Password must be more than 8 characters",
-			);
+			throw new Error("Password must be more than 8 characters");
 		}
 
 		if (!/[a-z]/.test(password)) {
-			throw new Error(
-				"Password must contain lowercase letters",
-			);
+			throw new Error("Password must contain lowercase letters");
 		}
 
 		if (!/[A-Z]/.test(password)) {
-			throw new Error(
-				"Password must contain uppercase letters",
-			);
+			throw new Error("Password must contain uppercase letters");
 		}
 
 		if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-			throw new Error(
-				"Password must contain special characters",
-			);
+			throw new Error("Password must contain special characters");
 		}
 	}
 
