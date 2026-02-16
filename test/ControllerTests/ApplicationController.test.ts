@@ -5,11 +5,30 @@ import { ApplicationService } from "../../src/services/application.service.js";
 
 vi.mock("../../src/services/application.service.js");
 
+function createMockFile(overrides?: Partial<Express.Multer.File>): Express.Multer.File {
+	return {
+		fieldname: "CV",
+		originalname: "resume.pdf",
+		encoding: "7bit",
+		mimetype: "application/pdf",
+		buffer: Buffer.from("PDF content"),
+		size: 1024,
+		destination: "",
+		filename: "resume.pdf",
+		path: "",
+		stream: null as any,
+		...overrides,
+	};
+}
+
 describe("ApplicationController", () => {
 	let controller: ApplicationController;
 	let mockRequest: Partial<Request>;
 	let mockResponse: Partial<Response>;
 	let consoleErrorSpy: any;
+
+	const mockS3Url =
+		"https://bucket.s3.us-east-1.amazonaws.com/applications/temp-123456/1739723400000_resume.pdf";
 
 	const mockApplication = {
 		applicationId: "app-123",
@@ -17,7 +36,7 @@ describe("ApplicationController", () => {
 		jobRoleId: "role-123",
 		status: "applied",
 		appliedAt: new Date("2026-02-16"),
-		cvUrl: "https://example.com/cv.pdf",
+		cvUrl: mockS3Url,
 	};
 
 	const mockApplications = [
@@ -28,7 +47,7 @@ describe("ApplicationController", () => {
 			jobRoleId: "role-456",
 			status: "accepted",
 			appliedAt: new Date("2026-02-15"),
-			cvUrl: "https://example.com/cv2.pdf",
+			cvUrl: mockS3Url,
 		},
 	];
 
@@ -164,12 +183,31 @@ describe("ApplicationController", () => {
 	});
 
 	describe("createApplication", () => {
-		it("should return 200 status with created application", async () => {
+		it("should return 400 status when file is missing", async () => {
 			mockRequest.body = {
 				userId: "user-123",
 				jobRoleId: "role-123",
-				cvUrl: "https://example.com/cv.pdf",
 			};
+			mockRequest.file = undefined;
+
+			await controller.createApplication(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "CV file is required",
+			});
+		});
+
+		it("should return 201 status with created application when file is provided", async () => {
+			const mockFile = createMockFile();
+			mockRequest.body = {
+				userId: "user-123",
+				jobRoleId: "role-123",
+			};
+			mockRequest.file = mockFile;
 			const mockCreateApplication = vi
 				.spyOn(ApplicationService.prototype, "createApplication")
 				.mockResolvedValue(mockApplication);
@@ -179,18 +217,50 @@ describe("ApplicationController", () => {
 				mockResponse as Response,
 			);
 
-			expect(mockResponse.status).toHaveBeenCalledWith(200);
+			expect(mockResponse.status).toHaveBeenCalledWith(201);
 			expect(mockResponse.json).toHaveBeenCalledWith(mockApplication);
+			expect(mockCreateApplication).toHaveBeenCalledWith(
+				mockRequest.body,
+				mockFile,
+			);
 			mockCreateApplication.mockRestore();
 		});
 
-		it("should call service with correct application data", async () => {
+		it("should call service with correct application data and file", async () => {
+			const mockFile = createMockFile({ originalname: "custom_resume.pdf" });
 			const applicationData = {
 				userId: "user-456",
 				jobRoleId: "role-456",
-				cvUrl: "https://example.com/cv2.pdf",
 			};
 			mockRequest.body = applicationData;
+			mockRequest.file = mockFile;
+			const mockCreateApplication = vi
+				.spyOn(ApplicationService.prototype, "createApplication")
+				.mockResolvedValue(mockApplications[1]);
+
+			await controller.createApplication(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(mockCreateApplication).toHaveBeenCalledWith(
+				applicationData,
+				mockFile,
+			);
+			mockCreateApplication.mockRestore();
+		});
+
+		it("should handle different file types", async () => {
+			const docxFile = createMockFile({
+				originalname: "resume.docx",
+				mimetype:
+					"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+			});
+			mockRequest.body = {
+				userId: "user-123",
+				jobRoleId: "role-123",
+			};
+			mockRequest.file = docxFile;
 			const mockCreateApplication = vi
 				.spyOn(ApplicationService.prototype, "createApplication")
 				.mockResolvedValue(mockApplication);
@@ -200,17 +270,22 @@ describe("ApplicationController", () => {
 				mockResponse as Response,
 			);
 
-			expect(mockCreateApplication).toHaveBeenCalledWith(applicationData);
+			expect(mockCreateApplication).toHaveBeenCalledWith(
+				mockRequest.body,
+				docxFile,
+			);
+			expect(mockResponse.status).toHaveBeenCalledWith(201);
 			mockCreateApplication.mockRestore();
 		});
 
-		it("should return 500 status on service error", async () => {
+		it("should return 500 status on service error with error message", async () => {
+			const mockFile = createMockFile();
+			const mockError = new Error("S3 upload failed");
 			mockRequest.body = {
 				userId: "user-123",
 				jobRoleId: "role-123",
-				cvUrl: "https://example.com/cv.pdf",
 			};
-			const mockError = new Error("Database error");
+			mockRequest.file = mockFile;
 			const mockCreateApplication = vi
 				.spyOn(ApplicationService.prototype, "createApplication")
 				.mockRejectedValue(mockError);
@@ -221,6 +296,9 @@ describe("ApplicationController", () => {
 			);
 
 			expect(mockResponse.status).toHaveBeenCalledWith(500);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "S3 upload failed",
+			});
 			expect(consoleErrorSpy).toHaveBeenCalled();
 			mockCreateApplication.mockRestore();
 		});

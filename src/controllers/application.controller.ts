@@ -37,13 +37,26 @@ export class ApplicationController {
 
 	async createApplication(req: Request, res: Response): Promise<void> {
 		const applicationData = req.body;
+		const file = req.file;
+
+		// Validate that file exists
+		if (!file) {
+			res.status(400).json({ error: "CV file is required" });
+			return;
+		}
+
 		try {
 			const application =
-				await this.applicationService.createApplication(applicationData);
-			res.status(200).json(application);
+				await this.applicationService.createApplication(applicationData, file);
+			res.status(201).json(application);
 		} catch (error) {
 			console.error("Error creating application:", error);
-			res.status(500).send();
+			res.status(500).json({
+				error:
+					error instanceof Error
+						? error.message
+						: "Internal server error",
+			});
 		}
 	}
 

@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ApplicationService } from "../../src/services/application.service.js";
 import { ApplicationDao } from "../../src/daos/application.dao.js";
+import { S3Service } from "../../src/services/s3.service.js";
 
 vi.mock("../../src/daos/application.dao.js");
+vi.mock("../../src/services/s3.service.js");
 
 describe("ApplicationService", () => {
 	let service: ApplicationService;
@@ -12,6 +14,21 @@ describe("ApplicationService", () => {
 	let mockCreateApplication: any;
 	let mockUpdateApplication: any;
 	let mockDeleteApplication: any;
+	let mockGenerateFileKey: any;
+	let mockUploadFile: any;
+
+	// Mock file object
+	const mockFile = {
+		fieldname: "CV",
+		originalname: "resume.pdf",
+		encoding: "7bit",
+		mimetype: "application/pdf",
+		buffer: Buffer.from("PDF content here"),
+		size: 1024,
+	} as Express.Multer.File;
+
+	const mockS3Url =
+		"https://bucket.s3.us-east-1.amazonaws.com/applications/temp-123456/1739723400000_resume.pdf";
 
 	const mockApplication = {
 		applicationId: "app-123",
@@ -19,7 +36,7 @@ describe("ApplicationService", () => {
 		jobRoleId: "role-123",
 		status: "applied",
 		appliedAt: new Date("2026-02-16"),
-		cvUrl: "https://example.com/cv.pdf",
+		cvUrl: mockS3Url,
 	};
 
 	const mockApplications = [
@@ -30,7 +47,7 @@ describe("ApplicationService", () => {
 			jobRoleId: "role-456",
 			status: "accepted",
 			appliedAt: new Date("2026-02-15"),
-			cvUrl: "https://example.com/cv2.pdf",
+			cvUrl: mockS3Url,
 		},
 	];
 
@@ -41,6 +58,10 @@ describe("ApplicationService", () => {
 		mockCreateApplication = vi.fn();
 		mockUpdateApplication = vi.fn();
 		mockDeleteApplication = vi.fn();
+		mockGenerateFileKey = vi
+			.fn()
+			.mockReturnValue("applications/temp-123456/1739723400000_resume.pdf");
+		mockUploadFile = vi.fn().mockResolvedValue(mockS3Url);
 
 		ApplicationDao.prototype.getAllApplications = mockGetApplications;
 		ApplicationDao.prototype.getApplicationById = mockGetApplicationById;
@@ -49,6 +70,9 @@ describe("ApplicationService", () => {
 		ApplicationDao.prototype.createApplication = mockCreateApplication;
 		ApplicationDao.prototype.updateApplication = mockUpdateApplication;
 		ApplicationDao.prototype.deleteApplication = mockDeleteApplication;
+
+		S3Service.prototype.generateFileKey = mockGenerateFileKey;
+		S3Service.prototype.uploadFile = mockUploadFile;
 
 		service = new ApplicationService();
 	});
@@ -169,47 +193,102 @@ describe("ApplicationService", () => {
 	});
 
 	describe("createApplication", () => {
-		it("should create and return new application", async () => {
+		it("should create and return new application with file upload", async () => {
 			const applicationData = {
 				userId: "user-123",
 				jobRoleId: "role-123",
-				cvUrl: "https://example.com/cv.pdf",
 			};
 			mockCreateApplication.mockResolvedValue(mockApplication);
 
-			const result = await service.createApplication(applicationData);
+			const result = await service.createApplication(applicationData, mockFile);
 
 			expect(result).toEqual(mockApplication);
-			expect(mockCreateApplication).toHaveBeenCalledWith(applicationData);
-			expect(mockCreateApplication).toHaveBeenCalledTimes(1);
+			expect(mockGenerateFileKey).toHaveBeenCalledWith("resume.pdf");
+			expect(mockUploadFile).toHaveBeenCalledWith(
+				mockFile,
+				"applications/temp-123456/1739723400000_resume.pdf",
+			);
+			expect(mockCreateApplication).toHaveBeenCalledWith({
+				...applicationData,
+				cvUrl: mockS3Url,
+			});
 		});
 
-		it("should pass application data to DAO unchanged", async () => {
+		it("should handle different file types", async () => {
+			const docFile = {
+				fieldname: "CV",
+				originalname: "resume.docx",
+				encoding: "7bit",
+				mimetype:
+					"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+				buffer: Buffer.from("DOCX content"),
+				size: 512,
+			}as Express.Multer.File;
+
 			const applicationData = {
 				userId: "user-456",
 				jobRoleId: "role-456",
-				cvUrl: "https://example.com/cv2.pdf",
 			};
-			mockCreateApplication.mockResolvedValue(mockApplications[1]);
+			mockCreateApplication.mockResolvedValue({
+				...mockApplication,
+				applicationId: "app-456",
+			});
 
-			await service.createApplication(applicationData);
+			await service.createApplication(applicationData, docFile);
 
-			expect(mockCreateApplication).toHaveBeenCalledWith(applicationData);
+			expect(mockGenerateFileKey).toHaveBeenCalledWith("resume.docx");
+			expect(mockUploadFile).toHaveBeenCalledWith(
+				docFile,
+				"applications/temp-123456/1739723400000_resume.pdf",
+			);
 		});
 
-		it("should propagate errors from DAO", async () => {
-			const error = new Error("Validation error");
+		it("should propagate S3 upload errors", async () => {
+			const error = new Error("S3 upload failed");
+			mockUploadFile.mockRejectedValue(error);
+
+			const applicationData = {
+				userId: "user-123",
+				jobRoleId: "role-123",
+			};
+
+			await expect(
+				service.createApplication(applicationData, mockFile),
+			).rejects.toThrow("S3 upload failed");
+		});
+
+		it("should propagate DAO creation errors", async () => {
+			const error = new Error("Database validation error");
 			mockCreateApplication.mockRejectedValue(error);
 
 			const applicationData = {
 				userId: "user-123",
 				jobRoleId: "role-123",
-				cvUrl: "https://example.com/cv.pdf",
 			};
 
-			await expect(service.createApplication(applicationData)).rejects.toThrow(
-				"Validation error",
-			);
+			await expect(
+				service.createApplication(applicationData, mockFile),
+			).rejects.toThrow("Database validation error");
+		});
+
+		it("should include S3 URL in application data passed to DAO", async () => {
+			const applicationData = {
+				userId: "user-789",
+				jobRoleId: "role-789",
+			};
+			mockCreateApplication.mockResolvedValue({
+				...mockApplication,
+				userId: "user-789",
+				jobRoleId: "role-789",
+			});
+
+			await service.createApplication(applicationData, mockFile);
+
+			expect(mockCreateApplication).toHaveBeenCalledWith({
+				userId: "user-789",
+				jobRoleId: "role-789",
+				cvUrl: mockS3Url,
+			});
 		});
 	});
 

@@ -2,7 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import express from "express";
 import request from "supertest";
 import { ApplicationDao } from "../../src/daos/application.dao.js";
+import { S3Service } from "../../src/services/s3.service.js";
 import applicationRouter from "../../src/routes/application.routes.js";
+
+vi.mock("../../src/services/s3.service.js");
 
 describe("Application Routes - Integration Tests", () => {
 	let getAllApplicationsSpy: ReturnType<typeof vi.spyOn>;
@@ -55,6 +58,20 @@ describe("Application Routes - Integration Tests", () => {
 	const expectedSingleResponse = expectedResponse[0];
 
 	beforeEach(() => {
+		// Set up environment variable for S3Service
+		process.env.AWS_S3_BUCKET_NAME = "test-bucket";
+		process.env.AWS_REGION = "us-east-1";
+
+		// Mock S3Service methods
+		vi.mocked(S3Service).prototype.generateFileKey = vi
+			.fn()
+			.mockReturnValue("applications/temp-123/1739723400000_resume.pdf");
+		vi.mocked(S3Service).prototype.uploadFile = vi
+			.fn()
+			.mockResolvedValue(
+				"https://bucket.s3.us-east-1.amazonaws.com/applications/temp-123/1739723400000_resume.pdf",
+			);
+
 		getAllApplicationsSpy = vi
 			.spyOn(ApplicationDao.prototype, "getAllApplications")
 			.mockResolvedValue(mockApplications);
@@ -82,6 +99,8 @@ describe("Application Routes - Integration Tests", () => {
 
 	afterEach(() => {
 		vi.restoreAllMocks();
+		delete process.env.AWS_S3_BUCKET_NAME;
+		delete process.env.AWS_REGION;
 	});
 
 	const buildApp = () => {
@@ -201,32 +220,40 @@ describe("Application Routes - Integration Tests", () => {
 	});
 
 	describe("POST /createApplication", () => {
-		it("should return 200 with created application", async () => {
+		it("should return 201 with created application", async () => {
 			const app = buildApp();
-			const applicationData = {
-				userId: "user-123",
-				jobRoleId: "role-123",
-				cvUrl: "https://example.com/cv.pdf",
-			};
 
 			const response = await request(app)
 				.post("/createApplication")
-				.send(applicationData);
+				.field("userId", "user-123")
+				.field("jobRoleId", "role-123")
+				.attach("CV", Buffer.from("PDF content"), "resume.pdf");
 
-			expect(response.status).toBe(200);
+			expect(response.status).toBe(201);
 			expect(response.body).toEqual(expectedSingleResponse);
-			expect(createApplicationSpy).toHaveBeenCalledWith(applicationData);
+		});
+
+		it("should return 400 when file is missing", async () => {
+			const app = buildApp();
+
+			const response = await request(app)
+				.post("/createApplication")
+				.field("userId", "user-123")
+				.field("jobRoleId", "role-123");
+
+			expect(response.status).toBe(400);
+			expect(response.body).toEqual({ error: "CV file is required" });
 		});
 
 		it("should return 500 when DAO throws error", async () => {
 			createApplicationSpy.mockRejectedValueOnce(new Error("Database error"));
 			const app = buildApp();
 
-			const response = await request(app).post("/createApplication").send({
-				userId: "user-123",
-				jobRoleId: "role-123",
-				cvUrl: "https://example.com/cv.pdf",
-			});
+			const response = await request(app)
+				.post("/createApplication")
+				.field("userId", "user-123")
+				.field("jobRoleId", "role-123")
+				.attach("CV", Buffer.from("PDF content"), "resume.pdf");
 
 			expect(response.status).toBe(500);
 		});

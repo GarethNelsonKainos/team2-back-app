@@ -1,5 +1,6 @@
 import express, { type Router } from "express";
 import { ApplicationController } from "../controllers/application.controller.js";
+import { upload } from "../middleware/file-upload.middleware.js";
 
 const router: Router = express.Router();
 const applicationController = new ApplicationController();
@@ -23,6 +24,7 @@ router.delete(
 
 router.post(
 	"/createApplication",
+	upload.single("CV"),
 	applicationController.createApplication.bind(applicationController),
 );
 
