@@ -1,4 +1,4 @@
-import express, { application } from "express";
+import express from "express";
 import jobRoleRoutes from "./routes/job-role.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import applicationRoutes from "./routes/application.routes.js";
