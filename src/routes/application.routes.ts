@@ -28,11 +28,9 @@ const handleUpload = (
 			return;
 		}
 
-		res
-			.status(400)
-			.json({
-				error: error instanceof Error ? error.message : "Upload failed",
-			});
+		res.status(400).json({
+			error: error instanceof Error ? error.message : "Upload failed",
+		});
 	});
 };
 
