@@ -87,13 +87,18 @@ export class JobRoleController {
 			}
 
 			// Validate SharePoint URL format
-			const urlRegex = /^https?:\/\/.+/;
-			if (!urlRegex.test(body.sharepointUrl)) {
+			try {
+				const parsedUrl = new URL(body.sharepointUrl);
+				if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+					res.status(400).json({ error: "Invalid SharePoint URL format" });
+					return;
+				}
+			} catch {
 				res.status(400).json({ error: "Invalid SharePoint URL format" });
 				return;
 			}
 
-			if (!body.responsibilities || !body.responsibilities.trim()) {
+			if (!body.responsibilities == null || !body.responsibilities.trim()) {
 				res.status(400).json({ error: "Responsibilities are required" });
 				return;
 			}
@@ -125,7 +130,8 @@ export class JobRoleController {
 			// Validate closing date is in the future
 			const today = new Date();
 			today.setHours(0, 0, 0, 0);
-			if (closingDate < today) {
+			closingDate.setHours(0, 0, 0, 0);
+			if (closingDate <= today) {
 				res.status(400).json({ error: "Closing date must be in the future" });
 				return;
 			}
@@ -158,10 +164,7 @@ export class JobRoleController {
 			console.error("Error creating job role:", error);
 
 			// Check for foreign key constraint errors
-			if (
-				error instanceof Error &&
-				error.message.includes("Foreign key constraint")
-			) {
+			if ((error as Error).message?.includes("Foreign key constraint")) {
 				res.status(400).json({ error: "Invalid capability or band selected" });
 				return;
 			}
