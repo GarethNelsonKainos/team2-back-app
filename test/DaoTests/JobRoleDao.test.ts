@@ -9,6 +9,16 @@ vi.mock("../../src/daos/prisma.js", () => ({
 		jobRole: {
 			findMany: vi.fn(),
 			findUnique: vi.fn(),
+			create: vi.fn(),
+		},
+		capability: {
+			findMany: vi.fn(),
+		},
+		band: {
+			findMany: vi.fn(),
+		},
+		status: {
+			findFirst: vi.fn(),
 		},
 	},
 }));
@@ -94,6 +104,7 @@ describe("JobRoleDao", () => {
 			);
 		});
 	});
+
 	describe("getJobRoleById", () => {
 		it("should call prisma.jobRole.findUnique with correct parameters", async () => {
 			// Arrange
@@ -150,6 +161,157 @@ describe("JobRoleDao", () => {
 			await expect(
 				dao.getJobRoleById("550e8400-e29b-41d4-a716-446655440000"),
 			).rejects.toThrow("Database connection failed");
+		});
+	});
+
+	describe("getAllCapabilities", () => {
+		it("should call prisma.capability.findMany with orderBy parameter", async () => {
+			// Arrange
+			const mockCapabilities: any[] = [
+				{ capabilityId: "1", capabilityName: "Engineering" },
+				{ capabilityId: "2", capabilityName: "Data" },
+			];
+			vi.mocked(prisma.capability.findMany).mockResolvedValue(mockCapabilities);
+
+			// Act
+			await dao.getAllCapabilities();
+
+			// Assert
+			expect(prisma.capability.findMany).toHaveBeenCalledOnce();
+			expect(prisma.capability.findMany).toHaveBeenCalledWith({
+				orderBy: {
+					capabilityName: "asc",
+				},
+			});
+		});
+
+		it("should return list of capabilities", async () => {
+			// Arrange
+			const mockCapabilities: any[] = [
+				{ capabilityId: "1", capabilityName: "Engineering" },
+			];
+			vi.mocked(prisma.capability.findMany).mockResolvedValue(mockCapabilities);
+
+			// Act
+			const result = await dao.getAllCapabilities();
+
+			// Assert
+			expect(result).toEqual(mockCapabilities);
+		});
+	});
+
+	describe("getAllBands", () => {
+		it("should call prisma.band.findMany with orderBy parameter", async () => {
+			// Arrange
+			const mockBands: any[] = [
+				{ bandId: "1", bandName: "Consultant" },
+				{ bandId: "2", bandName: "Senior Consultant" },
+			];
+			vi.mocked(prisma.band.findMany).mockResolvedValue(mockBands);
+
+			// Act
+			await dao.getAllBands();
+
+			// Assert
+			expect(prisma.band.findMany).toHaveBeenCalledOnce();
+			expect(prisma.band.findMany).toHaveBeenCalledWith({
+				orderBy: {
+					bandName: "asc",
+				},
+			});
+		});
+
+		it("should return list of bands", async () => {
+			// Arrange
+			const mockBands: any[] = [{ bandId: "1", bandName: "Consultant" }];
+			vi.mocked(prisma.band.findMany).mockResolvedValue(mockBands);
+
+			// Act
+			const result = await dao.getAllBands();
+
+			// Assert
+			expect(result).toEqual(mockBands);
+		});
+	});
+
+	describe("createJobRole", () => {
+		it("should create job role with Open status", async () => {
+			// Arrange
+			const mockStatus = { statusId: "status-1", statusName: "Open" };
+			const mockJobRole: any = {
+				jobRoleId: "new-job-role-id",
+				roleName: "Test Role",
+				description: "Test description",
+				sharepointUrl: "https://sharepoint.test",
+				responsibilities: "Test responsibilities",
+				numberOfOpenPositions: 5,
+				location: "Belfast",
+				closingDate: new Date("2026-12-31"),
+				capabilityId: "cap-1",
+				bandId: "band-1",
+				statusId: "status-1",
+			};
+
+			vi.mocked(prisma.status.findFirst).mockResolvedValue(mockStatus);
+			vi.mocked(prisma.jobRole.create).mockResolvedValue(mockJobRole);
+
+			// Act
+			const result = await dao.createJobRole({
+				roleName: "Test Role",
+				description: "Test description",
+				sharepointUrl: "https://sharepoint.test",
+				responsibilities: "Test responsibilities",
+				numberOfOpenPositions: 5,
+				location: "Belfast",
+				closingDate: new Date("2026-12-31"),
+				capabilityId: "cap-1",
+				bandId: "band-1",
+			});
+
+			// Assert
+			expect(prisma.status.findFirst).toHaveBeenCalledWith({
+				where: { statusName: "Open" },
+			});
+			expect(prisma.jobRole.create).toHaveBeenCalledWith({
+				data: {
+					roleName: "Test Role",
+					description: "Test description",
+					sharepointUrl: "https://sharepoint.test",
+					responsibilities: "Test responsibilities",
+					numberOfOpenPositions: 5,
+					location: "Belfast",
+					closingDate: new Date("2026-12-31"),
+					capabilityId: "cap-1",
+					bandId: "band-1",
+					statusId: "status-1",
+				},
+				include: {
+					capability: true,
+					band: true,
+					status: true,
+				},
+			});
+			expect(result).toEqual(mockJobRole);
+		});
+
+		it("should throw error when Open status not found", async () => {
+			// Arrange
+			vi.mocked(prisma.status.findFirst).mockResolvedValue(null);
+
+			// Act & Assert
+			await expect(
+				dao.createJobRole({
+					roleName: "Test Role",
+					description: "Test description",
+					sharepointUrl: "https://sharepoint.test",
+					responsibilities: "Test responsibilities",
+					numberOfOpenPositions: 5,
+					location: "Belfast",
+					closingDate: new Date("2026-12-31"),
+					capabilityId: "cap-1",
+					bandId: "band-1",
+				}),
+			).rejects.toThrow("Open status not found in database");
 		});
 	});
 });

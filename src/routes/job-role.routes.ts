@@ -12,4 +12,17 @@ router.get(
 	"/job-roles/:id",
 	jobRoleController.getJobRoleById.bind(jobRoleController),
 );
+
+router.get(
+	"/capabilities",
+	jobRoleController.getCapabilities.bind(jobRoleController),
+);
+
+router.get("/bands", jobRoleController.getBands.bind(jobRoleController));
+
+router.post(
+	"/job-roles",
+	jobRoleController.createJobRole.bind(jobRoleController),
+);
+
 export default router;
