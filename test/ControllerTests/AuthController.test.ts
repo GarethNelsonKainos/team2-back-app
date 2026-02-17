@@ -11,6 +11,7 @@ describe("AuthController", () => {
 	let mockRequest: Partial<Request>;
 	let mockResponse: Partial<Response>;
 	let mockLogin: any;
+	let mockRegister: any;
 	let consoleErrorSpy: any;
 
 	const mockTokenResponse = {
@@ -29,9 +30,10 @@ describe("AuthController", () => {
 
 		// Create mock function for Service method
 		mockLogin = vi.fn().mockResolvedValue(mockTokenResponse);
-
+		mockRegister = vi.fn().mockResolvedValue(mockTokenResponse);
 		// Mock the Service class
 		AuthService.prototype.login = mockLogin;
+		AuthService.prototype.register = mockRegister;
 
 		// Spy on console.error to suppress error logs in tests
 		consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
@@ -209,6 +211,328 @@ describe("AuthController", () => {
 
 			// Assert
 			expect(consoleErrorSpy).toHaveBeenCalledWith("Login error:", error);
+		});
+	});
+
+	describe("register", () => {
+		it("should return 201 status with token when registration is successful", async () => {
+			// Arrange
+			mockRequest.body = {
+				email: "newuser@test.com",
+				firstName: "New",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			};
+
+			// Act
+			await controller.register(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockResponse.status).toHaveBeenCalledWith(201);
+			expect(mockResponse.json).toHaveBeenCalledWith(mockTokenResponse);
+		});
+
+		it("should call service register method with correct parameters", async () => {
+			// Arrange
+			mockRequest.body = {
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			};
+
+			// Act
+			await controller.register(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockRegister).toHaveBeenCalledTimes(1);
+			expect(mockRegister).toHaveBeenCalledWith({
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			});
+		});
+
+		it("should return 400 status when email is missing", async () => {
+			// Arrange
+			mockRequest.body = {
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			};
+
+			// Act
+			await controller.register(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error:
+					"All fields are required: email, firstName, secondName, password, confirmedPassword",
+			});
+			expect(mockRegister).not.toHaveBeenCalled();
+		});
+
+		it("should return 400 status when firstName is missing", async () => {
+			// Arrange
+			mockRequest.body = {
+				email: "test@test.com",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			};
+
+			// Act
+			await controller.register(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error:
+					"All fields are required: email, firstName, secondName, password, confirmedPassword",
+			});
+			expect(mockRegister).not.toHaveBeenCalled();
+		});
+
+		it("should return 400 status when secondName is missing", async () => {
+			// Arrange
+			mockRequest.body = {
+				email: "test@test.com",
+				firstName: "Test",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			};
+
+			// Act
+			await controller.register(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error:
+					"All fields are required: email, firstName, secondName, password, confirmedPassword",
+			});
+			expect(mockRegister).not.toHaveBeenCalled();
+		});
+
+		it("should return 400 status when password is missing", async () => {
+			// Arrange
+			mockRequest.body = {
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				confirmedPassword: "SecurePass123!",
+			};
+
+			// Act
+			await controller.register(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error:
+					"All fields are required: email, firstName, secondName, password, confirmedPassword",
+			});
+			expect(mockRegister).not.toHaveBeenCalled();
+		});
+
+		it("should return 400 status when confirmedPassword is missing", async () => {
+			// Arrange
+			mockRequest.body = {
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+			};
+
+			// Act
+			await controller.register(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error:
+					"All fields are required: email, firstName, secondName, password, confirmedPassword",
+			});
+			expect(mockRegister).not.toHaveBeenCalled();
+		});
+
+		it("should return 400 status when email format is invalid", async () => {
+			// Arrange
+			mockRequest.body = {
+				email: "notanemail",
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			};
+
+			// Act
+			await controller.register(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Invalid email format",
+			});
+			expect(mockRegister).not.toHaveBeenCalled();
+		});
+
+		it("should return 409 status when user already exists", async () => {
+			// Arrange
+			mockRequest.body = {
+				email: "existing@test.com",
+				firstName: "Existing",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			};
+			mockRegister.mockRejectedValue(
+				new Error("User with this email already exists"),
+			);
+
+			// Act
+			await controller.register(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockResponse.status).toHaveBeenCalledWith(409);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "User with this email already exists",
+			});
+		});
+
+		it("should return 400 status when passwords do not match", async () => {
+			// Arrange
+			mockRequest.body = {
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			};
+			mockRegister.mockRejectedValue(new Error("Passwords do not match"));
+
+			// Act
+			await controller.register(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Passwords do not match",
+			});
+		});
+
+		it("should return 400 status for password validation errors", async () => {
+			// Arrange
+			mockRequest.body = {
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "weak",
+				confirmedPassword: "weak",
+			};
+			mockRegister.mockRejectedValue(
+				new Error(
+					"Password must be more than 8 characters and contain uppercase, lowercase, and special characters",
+				),
+			);
+
+			// Act
+			await controller.register(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error:
+					"Password must be more than 8 characters and contain uppercase, lowercase, and special characters",
+			});
+		});
+
+		it("should return 500 status for unexpected errors", async () => {
+			// Arrange
+			mockRequest.body = {
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			};
+			mockRegister.mockRejectedValue(new Error("Unexpected database error"));
+
+			// Act
+			await controller.register(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockResponse.status).toHaveBeenCalledWith(500);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Internal server error",
+			});
+		});
+
+		it("should log errors to console", async () => {
+			// Arrange
+			mockRequest.body = {
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			};
+			const testError = new Error("Test error");
+			mockRegister.mockRejectedValue(testError);
+
+			// Act
+			await controller.register(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(consoleErrorSpy).toHaveBeenCalledWith(
+				"Registration error:",
+				testError,
+			);
 		});
 	});
 });
