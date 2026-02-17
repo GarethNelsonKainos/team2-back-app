@@ -118,7 +118,7 @@ export class JobRoleController {
 			}
 
 			// Parse and validate numberOfOpenPositions
-			let numberOfOpenPositions: number | undefined ;
+			let numberOfOpenPositions: number | undefined;
 			if (
 				body.numberOfOpenPositions === undefined ||
 				body.numberOfOpenPositions === null ||
@@ -146,7 +146,7 @@ export class JobRoleController {
 				errors.push("Location is required");
 			}
 
-			let closingDate: Date | undefined ;
+			let closingDate: Date | undefined;
 			if (!body.closingDate || typeof body.closingDate !== "string") {
 				errors.push("Closing date is required");
 			} else {
