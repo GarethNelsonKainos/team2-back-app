@@ -534,5 +534,29 @@ describe("AuthController", () => {
 				testError,
 			);
 		});
+
+		it("should return 500 status for non-Error objects", async () => {
+			// Arrange
+			mockRequest.body = {
+				email: "test@test.com",
+				firstName: "Test",
+				secondName: "User",
+				password: "SecurePass123!",
+				confirmedPassword: "SecurePass123!",
+			};
+			mockRegister.mockRejectedValue("Unknown error string");
+
+			// Act
+			await controller.register(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockResponse.status).toHaveBeenCalledWith(500);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Internal server error",
+			});
+		});
 	});
 });
