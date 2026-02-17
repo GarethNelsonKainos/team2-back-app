@@ -23,9 +23,7 @@ export class ApplicationController {
 			res.status(201).json(application);
 		} catch (error) {
 			console.error("Error creating application:", error);
-			res.status(500).json({
-				error: error instanceof Error ? error.message : "Internal server error",
-			});
+			res.status(500).send();
 		}
 	}
 }

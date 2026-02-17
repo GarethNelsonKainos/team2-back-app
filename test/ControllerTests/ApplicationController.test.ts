@@ -108,7 +108,7 @@ describe("ApplicationController", () => {
 			mockCreateApplication.mockRestore();
 		});
 
-		it("should return 500 status on service error with error message", async () => {
+		it("should return 500 status on service error without error message", async () => {
 			const mockFile = createMockFile();
 			const mockError = new Error("S3 upload failed");
 			const applicationData: Prisma.ApplicationsUncheckedCreateInput = {
@@ -127,9 +127,8 @@ describe("ApplicationController", () => {
 			);
 
 			expect(mockResponse.status).toHaveBeenCalledWith(500);
-			expect(mockResponse.json).toHaveBeenCalledWith({
-				error: "S3 upload failed",
-			});
+			expect(mockResponse.send).toHaveBeenCalledWith();
+			expect(mockResponse.json).not.toHaveBeenCalled();
 			expect(consoleErrorSpy).toHaveBeenCalled();
 			mockCreateApplication.mockRestore();
 		});
