@@ -1,21 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { upload } from "../../src/middleware/file-upload.middleware.js";
 import type { Request, Response, NextFunction } from "express";
 
 describe("File Upload Middleware", () => {
-	let mockRequest: Partial<Request>;
-	let mockResponse: Partial<Response>;
-	let mockNextFunction: NextFunction;
+	let _mockRequest: Partial<Request>;
+	let _mockResponse: Partial<Response>;
+	let _mockNextFunction: NextFunction;
 
 	beforeEach(() => {
-		mockRequest = {
+		_mockRequest = {
 			file: undefined,
 		};
-		mockResponse = {
+		_mockResponse = {
 			status: vi.fn().mockReturnThis(),
 			json: vi.fn().mockReturnThis(),
 		};
-		mockNextFunction = vi.fn();
+		_mockNextFunction = vi.fn();
 	});
 
 	describe("upload.single('CV')", () => {
