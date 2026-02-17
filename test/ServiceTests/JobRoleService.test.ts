@@ -10,6 +10,9 @@ describe("JobRoleService", () => {
 	let service: JobRoleService;
 	let mockGetOpenJobRoles: any;
 	let mockGetJobRoleById: any;
+	let mockGetAllCapabilities: any;
+	let mockGetAllBands: any;
+	let mockCreateJobRole: any;
 
 	const mockDaoResponse = [
 		{
@@ -41,10 +44,16 @@ describe("JobRoleService", () => {
 		// Create mock function for DAO method
 		mockGetOpenJobRoles = vi.fn().mockResolvedValue(mockDaoResponse);
 		mockGetJobRoleById = vi.fn();
+		mockGetAllCapabilities = vi.fn();
+		mockGetAllBands = vi.fn();
+		mockCreateJobRole = vi.fn();
 
 		// Mock the DAO class
 		JobRoleDao.prototype.getOpenJobRoles = mockGetOpenJobRoles;
 		JobRoleDao.prototype.getJobRoleById = mockGetJobRoleById;
+		JobRoleDao.prototype.getAllCapabilities = mockGetAllCapabilities;
+		JobRoleDao.prototype.getAllBands = mockGetAllBands;
+		JobRoleDao.prototype.createJobRole = mockCreateJobRole;
 
 		service = new JobRoleService();
 	});
@@ -154,6 +163,72 @@ describe("JobRoleService", () => {
 			// Assert
 			expect(mockGetJobRoleById).toHaveBeenCalledTimes(1);
 			expect(mockGetJobRoleById).toHaveBeenCalledWith(testId);
+		});
+	});
+
+	describe("getAllCapabilities", () => {
+		it("should return list of capabilities", async () => {
+			// Arrange
+			const mockCapabilities = [
+				{ capabilityId: "1", capabilityName: "Engineering", jobRoles: [] },
+				{ capabilityId: "2", capabilityName: "Data", jobRoles: [] },
+			];
+			mockGetAllCapabilities.mockResolvedValue(mockCapabilities);
+
+			// Act
+			const result = await service.getAllCapabilities();
+
+			// Assert
+			expect(result).toEqual(mockCapabilities);
+			expect(mockGetAllCapabilities).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe("getAllBands", () => {
+		it("should return list of bands", async () => {
+			// Arrange
+			const mockBands = [
+				{ bandId: "1", bandName: "Consultant", jobRoles: [] },
+				{ bandId: "2", bandName: "Senior Consultant", jobRoles: [] },
+			];
+			mockGetAllBands.mockResolvedValue(mockBands);
+
+			// Act
+			const result = await service.getAllBands();
+
+			// Assert
+			expect(result).toEqual(mockBands);
+			expect(mockGetAllBands).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	describe("createJobRole", () => {
+		it("should create and return new job role", async () => {
+			// Arrange
+			const mockInput = {
+				roleName: "Test Role",
+				description: "Test description",
+				sharepointUrl: "https://sharepoint.test",
+				responsibilities: "Test responsibilities",
+				numberOfOpenPositions: 5,
+				location: "Belfast",
+				closingDate: new Date("2026-12-31"),
+				capabilityId: "cap-1",
+				bandId: "band-1",
+			};
+			const mockCreatedJobRole = {
+				jobRoleId: "new-id",
+				...mockInput,
+				statusId: "status-1",
+			};
+			mockCreateJobRole.mockResolvedValue(mockCreatedJobRole);
+
+			// Act
+			const result = await service.createJobRole(mockInput);
+
+			// Assert
+			expect(result).toEqual(mockCreatedJobRole);
+			expect(mockCreateJobRole).toHaveBeenCalledWith(mockInput);
 		});
 	});
 });
