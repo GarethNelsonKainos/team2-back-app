@@ -1,43 +1,46 @@
 import express, { type Router } from "express";
+import multer from "multer";
 import { ApplicationController } from "../controllers/application.controller.js";
 import { upload } from "../middleware/file-upload.middleware.js";
+import { authenticateToken } from "../middleware/auth.middleware.js";
 
 const router: Router = express.Router();
 const applicationController = new ApplicationController();
+const uploadSingle = upload.single("CV");
 
-router.get(
-	"/adminApplications",
-	applicationController.getApplications.bind(applicationController),
-);
-router.get(
-	"/adminApplications/:id",
-	applicationController.getApplicationById.bind(applicationController),
-);
-router.put(
-	"/adminApplications/:id",
-	applicationController.updateApplication.bind(applicationController),
-);
-router.delete(
-	"/adminApplications/:id",
-	applicationController.deleteApplication.bind(applicationController),
-);
+const handleUpload = (
+	req: express.Request,
+	res: express.Response,
+	next: express.NextFunction,
+): void => {
+	uploadSingle(req, res, (error) => {
+		if (!error) {
+			next();
+			return;
+		}
+
+		if (error instanceof multer.MulterError) {
+			if (error.code === "LIMIT_FILE_SIZE") {
+				res.status(400).json({ error: "File size exceeds 10MB limit" });
+				return;
+			}
+			res.status(400).json({ error: error.message });
+			return;
+		}
+
+		res
+			.status(400)
+			.json({
+				error: error instanceof Error ? error.message : "Upload failed",
+			});
+	});
+};
 
 router.post(
-	"/createApplication",
-	upload.single("CV"),
+	"/application",
+	authenticateToken,
+	handleUpload,
 	applicationController.createApplication.bind(applicationController),
 );
 
-router.get(
-	"/myApplications/:userId",
-	applicationController.getApplicationsForUser.bind(applicationController),
-);
-router.get(
-	"/myApplications/application/:id",
-	applicationController.getApplicationById.bind(applicationController),
-);
-router.delete(
-	"/myApplications/application/:id",
-	applicationController.deleteApplication.bind(applicationController),
-);
 export default router;

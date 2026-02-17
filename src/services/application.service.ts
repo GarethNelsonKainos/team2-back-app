@@ -1,4 +1,4 @@
-import type { Applications } from "../generated/prisma/client.js";
+import type { Applications, Prisma } from "../generated/prisma/client.js";
 import { ApplicationDao } from "../daos/application.dao.js";
 import { S3Service } from "./s3.service.js";
 
@@ -6,24 +6,8 @@ export class ApplicationService {
 	private applicationDao = new ApplicationDao();
 	private s3Service = new S3Service();
 
-	async getApplications(): Promise<Applications[]> {
-		const applications = await this.applicationDao.getAllApplications();
-		return applications;
-	}
-
-	async getApplicationById(id: string): Promise<Applications | null> {
-		const application = await this.applicationDao.getApplicationById(id);
-		return application;
-	}
-
-	async getApplicationsForUser(userId: string): Promise<Applications[]> {
-		const applications =
-			await this.applicationDao.getAllApplicationsForUser(userId);
-		return applications;
-	}
-
 	async createApplication(
-		applicationData: any,
+		applicationData: Prisma.ApplicationsUncheckedCreateInput,
 		file: Express.Multer.File,
 	): Promise<Applications> {
 		// Upload file to S3 first
@@ -40,21 +24,5 @@ export class ApplicationService {
 		);
 
 		return application;
-	}
-
-	async updateApplication(
-		id: string,
-		applicationData: any,
-	): Promise<Applications> {
-		const result = await this.applicationDao.updateApplication(
-			id,
-			applicationData,
-		);
-		return result;
-	}
-
-	async deleteApplication(id: string): Promise<Applications> {
-		const result = await this.applicationDao.deleteApplication(id);
-		return result;
 	}
 }

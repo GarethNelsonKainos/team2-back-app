@@ -103,13 +103,6 @@ describe("S3Service", () => {
 			);
 		});
 
-		it("should throw error when S3 upload fails", async () => {
-			// This test validates the try-catch in uploadFile
-			// Since we can't easily mock the S3 upload to fail in the current setup,
-			// we validate the error handling exists by checking error instanceof
-			expect(true).toBe(true); // Placeholder - covered by integration tests
-		});
-
 		it("should handle different AWS regions in URL", async () => {
 			process.env.AWS_REGION = "eu-west-1";
 			vi.clearAllMocks();
