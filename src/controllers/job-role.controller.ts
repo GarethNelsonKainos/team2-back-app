@@ -68,95 +68,103 @@ export class JobRoleController {
 
 	async createJobRole(req: Request, res: Response): Promise<void> {
 		try {
-			const body = req.body as CreateJobRoleBody;
+			const body = req.body as Partial<CreateJobRoleBody>;
+			const errors: string[] = [];
 
 			// Validate required fields
-			if (!body.roleName || !body.roleName.trim()) {
-				res.status(400).json({ error: "Role name is required" });
-				return;
+			if (!body.roleName || typeof body.roleName !== "string" || !body.roleName.trim()) {
+				errors.push("Role name is required");
 			}
 
-			if (!body.description || !body.description.trim()) {
-				res.status(400).json({ error: "Job spec summary is required" });
-				return;
+			if (!body.description || typeof body.description !== "string" || !body.description.trim()) {
+				errors.push("Job spec summary is required");
 			}
 
-			if (!body.sharepointUrl || !body.sharepointUrl.trim()) {
-				res.status(400).json({ error: "SharePoint link is required" });
-				return;
-			}
-
-			// Validate SharePoint URL format
-			try {
-				const parsedUrl = new URL(body.sharepointUrl);
-				if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
-					res.status(400).json({ error: "Invalid SharePoint URL format" });
-					return;
+			if (!body.sharepointUrl || typeof body.sharepointUrl !== "string" || !body.sharepointUrl.trim()) {
+				errors.push("SharePoint link is required");
+			} else {
+				// Validate SharePoint URL format
+				try {
+					const parsedUrl = new URL(body.sharepointUrl);
+					if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+						errors.push("Invalid SharePoint URL format");
+					}
+				} catch {
+					errors.push("Invalid SharePoint URL format");
 				}
-			} catch {
-				res.status(400).json({ error: "Invalid SharePoint URL format" });
+			}
+
+			if (!body.responsibilities || typeof body.responsibilities !== "string" || !body.responsibilities.trim()) {
+				errors.push("Responsibilities are required");
+			}
+
+			// Parse and validate numberOfOpenPositions
+			let numberOfOpenPositions: number | undefined = undefined;
+			if (
+				body.numberOfOpenPositions === undefined ||
+				body.numberOfOpenPositions === null ||
+				(typeof body.numberOfOpenPositions === "string" && (body.numberOfOpenPositions as string).trim() === "")
+			) {
+				errors.push("Number of open positions must be at least 1");
+			} else {
+				numberOfOpenPositions = Number(body.numberOfOpenPositions);
+				if (
+					Number.isNaN(numberOfOpenPositions) ||
+					!Number.isFinite(numberOfOpenPositions) ||
+					numberOfOpenPositions < 1 ||
+					!Number.isInteger(numberOfOpenPositions)
+				) {
+					errors.push("Number of open positions must be at least 1");
+				}
+			}
+
+			if (!body.location || typeof body.location !== "string" || !body.location.trim()) {
+				errors.push("Location is required");
+			}
+
+			let closingDate: Date | undefined = undefined;
+			if (!body.closingDate || typeof body.closingDate !== "string") {
+				errors.push("Closing date is required");
+			} else {
+				closingDate = new Date(body.closingDate);
+				if (Number.isNaN(closingDate.getTime())) {
+					errors.push("Invalid closing date format");
+				} else {
+					// Validate closing date is in the future
+					const today = new Date();
+					today.setHours(0, 0, 0, 0);
+					closingDate.setHours(0, 0, 0, 0);
+					if (closingDate <= today) {
+						errors.push("Closing date must be in the future");
+					}
+				}
+			}
+
+			if (!body.capabilityId || typeof body.capabilityId !== "string" || !body.capabilityId.trim()) {
+				errors.push("Capability is required");
+			}
+
+			if (!body.bandId || typeof body.bandId !== "string" || !body.bandId.trim()) {
+				errors.push("Band is required");
+			}
+
+			if (errors.length > 0) {
+				res.status(400).json({ errors });
 				return;
 			}
 
-			if (!body.responsibilities == null || !body.responsibilities.trim()) {
-				res.status(400).json({ error: "Responsibilities are required" });
-				return;
-			}
-
-			if (!body.numberOfOpenPositions || body.numberOfOpenPositions < 1) {
-				res
-					.status(400)
-					.json({ error: "Number of open positions must be at least 1" });
-				return;
-			}
-
-			if (!body.location || !body.location.trim()) {
-				res.status(400).json({ error: "Location is required" });
-				return;
-			}
-
-			if (!body.closingDate) {
-				res.status(400).json({ error: "Closing date is required" });
-				return;
-			}
-
-			// Validate closing date
-			const closingDate = new Date(body.closingDate);
-			if (Number.isNaN(closingDate.getTime())) {
-				res.status(400).json({ error: "Invalid closing date format" });
-				return;
-			}
-
-			// Validate closing date is in the future
-			const today = new Date();
-			today.setHours(0, 0, 0, 0);
-			closingDate.setHours(0, 0, 0, 0);
-			if (closingDate <= today) {
-				res.status(400).json({ error: "Closing date must be in the future" });
-				return;
-			}
-
-			if (!body.capabilityId || !body.capabilityId.trim()) {
-				res.status(400).json({ error: "Capability is required" });
-				return;
-			}
-
-			if (!body.bandId || !body.bandId.trim()) {
-				res.status(400).json({ error: "Band is required" });
-				return;
-			}
-
-			// Create the job role
+			// All validations passed, create the job role
+			// At this point, all required fields are present and valid
 			const jobRole = await this.jobRoleService.createJobRole({
-				roleName: body.roleName.trim(),
-				description: body.description.trim(),
-				sharepointUrl: body.sharepointUrl.trim(),
-				responsibilities: body.responsibilities.trim(),
-				numberOfOpenPositions: body.numberOfOpenPositions,
-				location: body.location.trim(),
-				closingDate: closingDate,
-				capabilityId: body.capabilityId.trim(),
-				bandId: body.bandId.trim(),
+				roleName: (body.roleName as string).trim(),
+				description: (body.description as string).trim(),
+				sharepointUrl: (body.sharepointUrl as string).trim(),
+				responsibilities: (body.responsibilities as string).trim(),
+				numberOfOpenPositions: numberOfOpenPositions as number,
+				location: (body.location as string).trim(),
+				closingDate: closingDate as Date,
+				capabilityId: (body.capabilityId as string).trim(),
+				bandId: (body.bandId as string).trim(),
 			});
 
 			res.status(201).json(jobRole);
@@ -165,11 +173,11 @@ export class JobRoleController {
 
 			// Check for foreign key constraint errors
 			if ((error as Error).message?.includes("Foreign key constraint")) {
-				res.status(400).json({ error: "Invalid capability or band selected" });
+				res.status(400).json({ errors: ["Invalid capability or band selected"] });
 				return;
 			}
 
-			res.status(500).json({ error: "Internal server error" });
+			res.status(500).json({ errors: ["Internal server error"] });
 		}
 	}
 }
