@@ -72,21 +72,36 @@ export class JobRoleController {
 			const errors: string[] = [];
 
 			// Validate required fields
-			if (!body.roleName || typeof body.roleName !== "string" || !body.roleName.trim()) {
+			if (
+				!body.roleName ||
+				typeof body.roleName !== "string" ||
+				!body.roleName.trim()
+			) {
 				errors.push("Role name is required");
 			}
 
-			if (!body.description || typeof body.description !== "string" || !body.description.trim()) {
+			if (
+				!body.description ||
+				typeof body.description !== "string" ||
+				!body.description.trim()
+			) {
 				errors.push("Job spec summary is required");
 			}
 
-			if (!body.sharepointUrl || typeof body.sharepointUrl !== "string" || !body.sharepointUrl.trim()) {
+			if (
+				!body.sharepointUrl ||
+				typeof body.sharepointUrl !== "string" ||
+				!body.sharepointUrl.trim()
+			) {
 				errors.push("SharePoint link is required");
 			} else {
 				// Validate SharePoint URL format
 				try {
 					const parsedUrl = new URL(body.sharepointUrl);
-					if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
+					if (
+						parsedUrl.protocol !== "http:" &&
+						parsedUrl.protocol !== "https:"
+					) {
 						errors.push("Invalid SharePoint URL format");
 					}
 				} catch {
@@ -94,16 +109,21 @@ export class JobRoleController {
 				}
 			}
 
-			if (!body.responsibilities || typeof body.responsibilities !== "string" || !body.responsibilities.trim()) {
+			if (
+				!body.responsibilities ||
+				typeof body.responsibilities !== "string" ||
+				!body.responsibilities.trim()
+			) {
 				errors.push("Responsibilities are required");
 			}
 
 			// Parse and validate numberOfOpenPositions
-			let numberOfOpenPositions: number | undefined = undefined;
+			let numberOfOpenPositions: number | undefined;
 			if (
 				body.numberOfOpenPositions === undefined ||
 				body.numberOfOpenPositions === null ||
-				(typeof body.numberOfOpenPositions === "string" && (body.numberOfOpenPositions as string).trim() === "")
+				(typeof body.numberOfOpenPositions === "string" &&
+					(body.numberOfOpenPositions as string).trim() === "")
 			) {
 				errors.push("Number of open positions must be at least 1");
 			} else {
@@ -118,11 +138,15 @@ export class JobRoleController {
 				}
 			}
 
-			if (!body.location || typeof body.location !== "string" || !body.location.trim()) {
+			if (
+				!body.location ||
+				typeof body.location !== "string" ||
+				!body.location.trim()
+			) {
 				errors.push("Location is required");
 			}
 
-			let closingDate: Date | undefined = undefined;
+			let closingDate: Date | undefined;
 			if (!body.closingDate || typeof body.closingDate !== "string") {
 				errors.push("Closing date is required");
 			} else {
@@ -140,11 +164,19 @@ export class JobRoleController {
 				}
 			}
 
-			if (!body.capabilityId || typeof body.capabilityId !== "string" || !body.capabilityId.trim()) {
+			if (
+				!body.capabilityId ||
+				typeof body.capabilityId !== "string" ||
+				!body.capabilityId.trim()
+			) {
 				errors.push("Capability is required");
 			}
 
-			if (!body.bandId || typeof body.bandId !== "string" || !body.bandId.trim()) {
+			if (
+				!body.bandId ||
+				typeof body.bandId !== "string" ||
+				!body.bandId.trim()
+			) {
 				errors.push("Band is required");
 			}
 
@@ -173,7 +205,9 @@ export class JobRoleController {
 
 			// Check for foreign key constraint errors
 			if ((error as Error).message?.includes("Foreign key constraint")) {
-				res.status(400).json({ errors: ["Invalid capability or band selected"] });
+				res
+					.status(400)
+					.json({ errors: ["Invalid capability or band selected"] });
 				return;
 			}
 
