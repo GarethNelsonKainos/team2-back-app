@@ -324,20 +324,20 @@ describe("JobRoleController", () => {
 			);
 
 			// Assert
-				       expect(mockResponse.status).toHaveBeenCalledWith(400);
-				       expect(mockResponse.json).toHaveBeenCalledWith({
-					       errors: [
-						       "Role name is required",
-						       "Job spec summary is required",
-						       "SharePoint link is required",
-						       "Responsibilities are required",
-						       "Number of open positions must be at least 1",
-						       "Location is required",
-						       "Closing date is required",
-						       "Capability is required",
-						       "Band is required",
-					       ],
-				       });
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				errors: [
+					"Role name is required",
+					"Job spec summary is required",
+					"SharePoint link is required",
+					"Responsibilities are required",
+					"Number of open positions must be at least 1",
+					"Location is required",
+					"Closing date is required",
+					"Capability is required",
+					"Band is required",
+				],
+			});
 		});
 
 		it("should return 400 when SharePoint URL format is invalid", async () => {
@@ -363,10 +363,10 @@ describe("JobRoleController", () => {
 			);
 
 			// Assert
-			       expect(mockResponse.status).toHaveBeenCalledWith(400);
-			       expect(mockResponse.json).toHaveBeenCalledWith({
-				       errors: ["Invalid SharePoint URL format"],
-			       });
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				errors: ["Invalid SharePoint URL format"],
+			});
 		});
 
 		it("should return 400 when closing date is in the past", async () => {
@@ -392,10 +392,10 @@ describe("JobRoleController", () => {
 			);
 
 			// Assert
-			       expect(mockResponse.status).toHaveBeenCalledWith(400);
-			       expect(mockResponse.json).toHaveBeenCalledWith({
-				       errors: ["Closing date must be in the future"],
-			       });
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				errors: ["Closing date must be in the future"],
+			});
 		});
 
 		it("should return 400 when numberOfOpenPositions is less than 1", async () => {
@@ -421,10 +421,10 @@ describe("JobRoleController", () => {
 			);
 
 			// Assert
-			       expect(mockResponse.status).toHaveBeenCalledWith(400);
-			       expect(mockResponse.json).toHaveBeenCalledWith({
-				       errors: ["Number of open positions must be at least 1"],
-			       });
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				errors: ["Number of open positions must be at least 1"],
+			});
 		});
 
 		it("should return 500 status when service throws an error", async () => {

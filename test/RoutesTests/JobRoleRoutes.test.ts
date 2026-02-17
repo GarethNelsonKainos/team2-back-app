@@ -366,18 +366,18 @@ describe("JobRole Routes - Integration Tests", () => {
 
 			const response = await request(app).post("/job-roles").send({});
 
-			       expect(response.status).toBe(400);
-			       expect(response.body.errors).toEqual([
-				       "Role name is required",
-				       "Job spec summary is required",
-				       "SharePoint link is required",
-				       "Responsibilities are required",
-				       "Number of open positions must be at least 1",
-				       "Location is required",
-				       "Closing date is required",
-				       "Capability is required",
-				       "Band is required",
-			       ]);
+			expect(response.status).toBe(400);
+			expect(response.body.errors).toEqual([
+				"Role name is required",
+				"Job spec summary is required",
+				"SharePoint link is required",
+				"Responsibilities are required",
+				"Number of open positions must be at least 1",
+				"Location is required",
+				"Closing date is required",
+				"Capability is required",
+				"Band is required",
+			]);
 		});
 
 		it("should return 400 when SharePoint URL is invalid", async () => {
@@ -401,8 +401,8 @@ describe("JobRole Routes - Integration Tests", () => {
 				.post("/job-roles")
 				.send(invalidJobRole);
 
-			   expect(response.status).toBe(400);
-			   expect(response.body.errors).toEqual(["Invalid SharePoint URL format"]);
+			expect(response.status).toBe(400);
+			expect(response.body.errors).toEqual(["Invalid SharePoint URL format"]);
 		});
 
 		it("should return 400 when closing date is in the past", async () => {
@@ -426,8 +426,10 @@ describe("JobRole Routes - Integration Tests", () => {
 				.post("/job-roles")
 				.send(invalidJobRole);
 
-			   expect(response.status).toBe(400);
-			   expect(response.body.errors).toEqual(["Closing date must be in the future"]);
+			expect(response.status).toBe(400);
+			expect(response.body.errors).toEqual([
+				"Closing date must be in the future",
+			]);
 		});
 
 		it("should return 500 when the DAO throws", async () => {
