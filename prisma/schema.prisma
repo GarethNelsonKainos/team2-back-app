@@ -51,8 +51,10 @@ model JobRole {
   bandId       String
   band         Band       @relation(fields: [bandId], references: [bandId])
 
-  statusId     String
-  status       Status     @relation(fields: [statusId], references: [statusId])
+  statusId     String?
+  status       Status?     @relation(fields: [statusId], references: [statusId])
+
+  applications  Applications[]
 }
 
 model User {
@@ -64,4 +66,18 @@ model User {
   role      String   @default("user")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  applications Applications[]
+}
+
+model Applications{
+  applicationId String  @id @default(uuid())
+  userId        String
+  jobRoleId     String
+  status        String
+  appliedAt     DateTime @default(now())
+  cvUrl         String
+
+  user          User     @relation(fields: [userId], references: [userId])
+  jobRole       JobRole  @relation(fields: [jobRoleId], references: [jobRoleId])  
 }
