@@ -1,7 +1,6 @@
 import multer from "multer";
-import type { Request } from "express";
+import express from "express";
 
-// Allowed file types
 const ALLOWED_MIMETYPES = [
 	"application/msword", // .doc
 	"application/vnd.openxmlformats-officedocument.wordprocessingml.document", // .docx
@@ -10,12 +9,11 @@ const ALLOWED_MIMETYPES = [
 
 const ALLOWED_EXTENSIONS = [".doc", ".docx", ".pdf"];
 
-// Configure multer storage (store in memory)
 const storage = multer.memoryStorage();
 
-// File filter to validate file type
+// File filter to validate file type and size
 const fileFilter = (
-	_req: Request,
+	_req: express.Request,
 	file: Express.Multer.File,
 	cb: multer.FileFilterCallback,
 ) => {
@@ -45,6 +43,32 @@ const fileFilter = (
 	cb(null, true);
 };
 
+export const handleUpload = (
+	req: express.Request,
+	res: express.Response,
+	next: express.NextFunction,
+): void => {
+	uploadSingle(req, res, (error) => {
+		if (!error) {
+			next();
+			return;
+		}
+
+		if (error instanceof multer.MulterError) {
+			if (error.code === "LIMIT_FILE_SIZE") {
+				res.status(400).json({ error: "File size exceeds 10MB limit" });
+				return;
+			}
+			res.status(400).json({ error: error.message });
+			return;
+		}
+
+		res.status(400).json({
+			error: error instanceof Error ? error.message : "Upload failed",
+		});
+	});
+};
+
 // Create multer instance
 export const upload = multer({
 	storage,
@@ -53,3 +77,5 @@ export const upload = multer({
 		fileSize: 10 * 1024 * 1024, // 10MB max file size
 	},
 });
+
+const uploadSingle = upload.single("CV");

@@ -74,7 +74,7 @@ model Applications{
   applicationId String  @id @default(uuid())
   userId        String
   jobRoleId     String
-  status        String   @default("In Progress")
+  status        String
   appliedAt     DateTime @default(now())
   cvUrl         String? 
 

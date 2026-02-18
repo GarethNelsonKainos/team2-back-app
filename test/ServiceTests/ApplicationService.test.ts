@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ApplicationService } from "../../src/services/application.service.js";
 import { ApplicationDao } from "../../src/daos/application.dao.js";
 import { S3Service } from "../../src/services/s3.service.js";
-import type { Prisma } from "../../src/generated/prisma/client.js";
+import type { CreateApplicationInput } from "../../src/controllers/application.controller.js";
 
 vi.mock("../../src/daos/application.dao.js");
 vi.mock("../../src/services/s3.service.js");
@@ -45,14 +45,17 @@ describe("ApplicationService", () => {
 		S3Service.prototype.generateFileKey = mockGenerateFileKey;
 		S3Service.prototype.uploadFile = mockUploadFile;
 
-		service = new ApplicationService();
+		const mockDao = new ApplicationDao();
+		const mockS3Service = new S3Service();
+		service = new ApplicationService(mockDao, mockS3Service);
 	});
 
 	describe("createApplication", () => {
 		it("should create and return new application with file upload", async () => {
-			const applicationData: Prisma.ApplicationsUncheckedCreateInput = {
+			const applicationData: CreateApplicationInput = {
 				userId: "user-123",
 				jobRoleId: "role-123",
+				status: "IN_PROGRESS",
 			};
 			mockCreateApplication.mockResolvedValue(mockApplication);
 
@@ -64,19 +67,24 @@ describe("ApplicationService", () => {
 				mockFile,
 				"applications/temp-123456/1739723400000_resume.pdf",
 			);
-			expect(mockCreateApplication).toHaveBeenCalledWith({
-				...applicationData,
-				cvUrl: mockS3Url,
-			});
+			expect(mockCreateApplication).toHaveBeenCalledWith(
+				expect.objectContaining({
+					userId: "user-123",
+					jobRoleId: "role-123",
+					status: "IN_PROGRESS",
+					cvUrl: mockS3Url,
+				}),
+			);
 		});
 
 		it("should propagate S3 upload errors", async () => {
 			const error = new Error("S3 upload failed");
 			mockUploadFile.mockRejectedValue(error);
 
-			const applicationData: Prisma.ApplicationsUncheckedCreateInput = {
+			const applicationData: CreateApplicationInput = {
 				userId: "user-123",
 				jobRoleId: "role-123",
+				status: "IN_PROGRESS",
 			};
 
 			await expect(
@@ -88,9 +96,10 @@ describe("ApplicationService", () => {
 			const error = new Error("Database validation error");
 			mockCreateApplication.mockRejectedValue(error);
 
-			const applicationData: Prisma.ApplicationsUncheckedCreateInput = {
+			const applicationData: CreateApplicationInput = {
 				userId: "user-123",
 				jobRoleId: "role-123",
+				status: "IN_PROGRESS",
 			};
 
 			await expect(

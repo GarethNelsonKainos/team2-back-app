@@ -1,10 +1,8 @@
-import type { Prisma } from "../generated/prisma/client.js";
 import { prisma } from "./prisma.js";
+import type { CreateApplicationInput } from "../controllers/application.controller.js";
 
 export class ApplicationDao {
-	async createApplication(
-		applicationData: Prisma.ApplicationsUncheckedCreateInput,
-	) {
+	async createApplication(applicationData: CreateApplicationInput) {
 		return prisma.applications.create({
 			data: applicationData,
 		});

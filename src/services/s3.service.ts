@@ -1,21 +1,32 @@
-import AWS from "aws-sdk";
-import type { Express } from "express";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 export class S3Service {
-	private s3: AWS.S3;
+	private s3: S3Client;
 	private bucketName: string;
 
 	constructor() {
 		this.bucketName = process.env.S3_BUCKET_NAME || "";
+		const accessKeyId = process.env.AWS_ACCESS_KEY_ID;
+		const secretAccessKey = process.env.AWS_SECRET_ACCESS_KEY;
+		const region = process.env.AWS_REGION || "us-east-1";
 
 		if (!this.bucketName) {
 			throw new Error("S3_BUCKET_NAME environment variable is not set");
 		}
 
-		// AWS SDK v2 automatically uses credentials from environment variables
-		// or AWS credentials file (~/.aws/credentials)
-		this.s3 = new AWS.S3({
-			region: process.env.AWS_REGION || "us-east-1",
+		if (!accessKeyId || !secretAccessKey) {
+			throw new Error(
+				"AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables must be set",
+			);
+		}
+
+		// Explicitly pass credentials for better control and clarity
+		this.s3 = new S3Client({
+			region,
+			credentials: {
+				accessKeyId,
+				secretAccessKey,
+			},
 		});
 	}
 
@@ -27,7 +38,7 @@ export class S3Service {
 			throw new Error("No file provided");
 		}
 
-		const params: AWS.S3.PutObjectRequest = {
+		const params = {
 			Bucket: this.bucketName,
 			Key: fileKey,
 			Body: file.buffer,
@@ -35,7 +46,7 @@ export class S3Service {
 		};
 
 		try {
-			await this.s3.upload(params).promise();
+			await this.s3.send(new PutObjectCommand(params));
 
 			// Return S3 object URL
 			const region = process.env.AWS_REGION || "us-east-1";

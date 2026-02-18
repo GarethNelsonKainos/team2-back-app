@@ -1,3 +1,6 @@
+-- CreateEnum
+CREATE TYPE "ApplicationStatus" AS ENUM ('IN_PROGRESS', 'REJECTED', 'ACCEPTED');
+
 -- DropForeignKey
 ALTER TABLE "JobRole" DROP CONSTRAINT "JobRole_statusId_fkey";
 
@@ -6,7 +9,7 @@ CREATE TABLE "Applications" (
     "applicationId" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "jobRoleId" TEXT NOT NULL,
-    "status" TEXT NOT NULL DEFAULT 'In Progress',
+    "status" "ApplicationStatus" NOT NULL DEFAULT 'IN_PROGRESS',
     "appliedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "cvUrl" TEXT,
 

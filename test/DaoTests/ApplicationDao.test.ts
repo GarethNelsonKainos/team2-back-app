@@ -1,10 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ApplicationDao } from "../../src/daos/application.dao.js";
 import { prisma } from "../../src/daos/prisma.js";
-import type {
-	Applications,
-	Prisma,
-} from "../../src/generated/prisma/client.js";
+import type { Applications } from "../../src/generated/prisma/client.js";
+import type { CreateApplicationInput } from "../../src/controllers/application.controller.js";
 
 vi.mock("../../src/daos/prisma.js", () => ({
 	prisma: {
@@ -36,9 +34,10 @@ describe("ApplicationDao", () => {
 			const mockCreate = vi.mocked(prisma.applications.create);
 			mockCreate.mockResolvedValue(mockApplication);
 
-			const applicationData: Prisma.ApplicationsUncheckedCreateInput = {
+			const applicationData: CreateApplicationInput = {
 				userId: "user-123",
 				jobRoleId: "role-123",
+				status: "IN_PROGRESS",
 				cvUrl: "https://example.com/cv.pdf",
 			};
 
@@ -54,9 +53,10 @@ describe("ApplicationDao", () => {
 			const mockCreate = vi.mocked(prisma.applications.create);
 			mockCreate.mockResolvedValue(mockApplication);
 
-			const applicationData: Prisma.ApplicationsUncheckedCreateInput = {
+			const applicationData: CreateApplicationInput = {
 				userId: "user-123",
 				jobRoleId: "role-123",
+				status: "IN_PROGRESS",
 				cvUrl: "https://example.com/cv.pdf",
 			};
 
@@ -71,9 +71,10 @@ describe("ApplicationDao", () => {
 			const dbError = new Error("Unique constraint failed");
 			mockCreate.mockRejectedValue(dbError);
 
-			const applicationData: Prisma.ApplicationsUncheckedCreateInput = {
+			const applicationData: CreateApplicationInput = {
 				userId: "user-123",
 				jobRoleId: "role-123",
+				status: "IN_PROGRESS",
 				cvUrl: "https://example.com/cv.pdf",
 			};
 

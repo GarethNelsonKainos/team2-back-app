@@ -1,13 +1,16 @@
-import type { Applications, Prisma } from "../generated/prisma/client.js";
-import { ApplicationDao } from "../daos/application.dao.js";
-import { S3Service } from "./s3.service.js";
+import type { Applications } from "../generated/prisma/client.js";
+import type { ApplicationDao } from "../daos/application.dao.js";
+import type { S3Service } from "./s3.service.js";
+import type { CreateApplicationInput } from "../controllers/application.controller.js";
 
 export class ApplicationService {
-	private applicationDao = new ApplicationDao();
-	private s3Service = new S3Service();
+	constructor(
+		private applicationDao: ApplicationDao,
+		private s3Service: S3Service,
+	) {}
 
 	async createApplication(
-		applicationData: Prisma.ApplicationsUncheckedCreateInput,
+		applicationData: CreateApplicationInput,
 		file: Express.Multer.File,
 	): Promise<Applications> {
 		// Upload file to S3 first
@@ -15,13 +18,9 @@ export class ApplicationService {
 		const cvUrl = await this.s3Service.uploadFile(file, fileKey);
 
 		// Create the application with the file URL already set
-		const applicationDataWithUrl = {
-			...applicationData,
-			cvUrl,
-		};
-		const application = await this.applicationDao.createApplication(
-			applicationDataWithUrl,
-		);
+		applicationData.cvUrl = cvUrl;
+		const application =
+			await this.applicationDao.createApplication(applicationData);
 
 		return application;
 	}
