@@ -1,4 +1,9 @@
-import type { JobRole, Capability, Band } from "../generated/prisma/client.js";
+import type {
+	JobRole,
+	Capability,
+	Band,
+	Status,
+} from "../generated/prisma/client.js";
 import { prisma } from "./prisma.js";
 
 export interface CreateJobRoleInput {
@@ -11,6 +16,19 @@ export interface CreateJobRoleInput {
 	closingDate: Date;
 	capabilityId: string;
 	bandId: string;
+}
+
+export interface UpdateJobRoleInput {
+	roleName?: string;
+	description?: string;
+	sharepointUrl?: string;
+	responsibilities?: string;
+	numberOfOpenPositions?: number;
+	location?: string;
+	closingDate?: Date;
+	capabilityId?: string;
+	bandId?: string;
+	statusId?: string;
 }
 
 export class JobRoleDao {
@@ -51,6 +69,14 @@ export class JobRoleDao {
 		});
 	}
 
+	async getAllStatuses(): Promise<Status[]> {
+		return prisma.status.findMany({
+			orderBy: {
+				statusName: "asc",
+			},
+		});
+	}
+
 	async createJobRole(input: CreateJobRoleInput): Promise<JobRole> {
 		// Get the "Open" status
 		const openStatus = await prisma.status.findFirst({
@@ -74,6 +100,29 @@ export class JobRoleDao {
 				bandId: input.bandId,
 				statusId: openStatus.statusId,
 			},
+			include: {
+				capability: true,
+				band: true,
+				status: true,
+			},
+		});
+	}
+
+	async updateJobRole(
+		id: string,
+		input: UpdateJobRoleInput,
+	): Promise<JobRole | null> {
+		const existingJobRole = await prisma.jobRole.findUnique({
+			where: { jobRoleId: id },
+		});
+
+		if (!existingJobRole) {
+			return null;
+		}
+
+		return prisma.jobRole.update({
+			where: { jobRoleId: id },
+			data: input,
 			include: {
 				capability: true,
 				band: true,
