@@ -17,7 +17,6 @@ export default function applicationRouter(
 
 	router.get(
 		"/myApplications", 
-		authenticateToken, 
 		applicationController.getApplicationsForUser.bind(applicationController));
 
 	return router;
