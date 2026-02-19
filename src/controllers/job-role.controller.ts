@@ -363,8 +363,8 @@ export class JobRoleController {
 		req: Request<JobRoleParams>,
 		res: Response,
 	): Promise<void> {
+		const { id } = req.params;
 		try {
-			const { id } = req.params;
 			const deletedJobRole = await this.jobRoleService.deleteJobRole(id);
 
 			if (!deletedJobRole) {
