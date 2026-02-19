@@ -1,367 +1,317 @@
 import type { Request, Response } from "express";
 import { JobRoleService } from "../services/job-role.service.js";
+import {
+  validateStringField,
+  validateSharePointUrl,
+  validateClosingDate,
+  validateNumberOfOpenPositions,
+} from "../validators/job-role.validators.js";
 
 type JobRoleParams = { id: string };
 
-interface CreateJobRoleBody {
-	roleName: string;
-	description: string;
-	sharepointUrl: string;
-	responsibilities: string;
-	numberOfOpenPositions: number;
-	location: string;
-	closingDate: string;
-	capabilityId: string;
-	bandId: string;
+interface JobRoleBase {
+  roleName: string;
+  description: string;
+  sharepointUrl: string;
+  responsibilities: string;
+  numberOfOpenPositions: number;
+  location: string;
+  closingDate: string;
+  capabilityId: string;
+  bandId: string;
 }
 
-interface UpdateJobRoleBody {
-	roleName?: string;
-	description?: string;
-	sharepointUrl?: string;
-	responsibilities?: string;
-	numberOfOpenPositions?: number;
-	location?: string;
-	closingDate?: string;
-	capabilityId?: string;
-	bandId?: string;
-	statusId?: string;
+type CreateJobRoleBody = JobRoleBase; 
+
+interface UpdateJobRoleBody extends Partial<JobRoleBase> {
+  statusId?: string;
 }
 
 export class JobRoleController {
-	private jobRoleService = new JobRoleService();
+  private jobRoleService = new JobRoleService();
 
-	async getJobRoles(_req: Request, res: Response): Promise<void> {
-		try {
-			const jobRoles = await this.jobRoleService.getOpenJobRoles();
-			res.status(200).json(jobRoles);
-		} catch (error) {
-			console.error("Error fetching job roles:", error);
-			res.status(500).send();
-		}
-	}
+  private validateCreateFields(body: CreateJobRoleBody): {
+    error?: string;
+    data?: {
+      roleName: string;
+      description: string;
+      sharepointUrl: string;
+      responsibilities: string;
+      numberOfOpenPositions: number;
+      location: string;
+      closingDate: Date;
+      capabilityId: string;
+      bandId: string;
+    };
+  } {
+    // Validate roleName
+    const roleNameError = validateStringField(body.roleName, "Role name", true);
+    if (roleNameError) return { error: roleNameError };
+    const roleNameTrimmed = body.roleName.trim();
 
-	async getJobRoleById(
-		req: Request<JobRoleParams>,
-		res: Response,
-	): Promise<void> {
-		const { id } = req.params;
-		try {
-			const jobRole = await this.jobRoleService.getJobRoleById(id);
-			if (jobRole) {
-				res.status(200).json(jobRole);
-			} else {
-				res.status(404).send();
-			}
-		} catch (error) {
-			console.error(`Error fetching job role with id ${id}:`, error);
-			res.status(500).send();
-		}
-	}
+    // Validate description
+    const descriptionError = validateStringField(body.description, "Job spec summary", true);
+    if (descriptionError) return { error: descriptionError };
+    const descriptionTrimmed = body.description.trim();
 
-	async getCapabilities(_req: Request, res: Response): Promise<void> {
-		try {
-			const capabilities = await this.jobRoleService.getAllCapabilities();
-			res.status(200).json(capabilities);
-		} catch (error) {
-			console.error("Error fetching capabilities:", error);
-			res.status(500).send();
-		}
-	}
+    // Validate sharepointUrl
+    const sharepointUrlError = validateSharePointUrl(body.sharepointUrl, true);
+    if (sharepointUrlError) return { error: sharepointUrlError };
+    const sharepointUrlTrimmed = body.sharepointUrl.trim();
 
-	async getBands(_req: Request, res: Response): Promise<void> {
-		try {
-			const bands = await this.jobRoleService.getAllBands();
-			res.status(200).json(bands);
-		} catch (error) {
-			console.error("Error fetching bands:", error);
-			res.status(500).send();
-		}
-	}
+    // Validate responsibilities
+    const responsibilitiesError = validateStringField(body.responsibilities, "Responsibilities", true);
+    if (responsibilitiesError) return { error: responsibilitiesError };
+    const responsibilitiesTrimmed = body.responsibilities.trim();
 
-	async getStatuses(_req: Request, res: Response): Promise<void> {
-		try {
-			const statuses = await this.jobRoleService.getAllStatuses();
-			res.status(200).json(statuses);
-		} catch (error) {
-			console.error("Error fetching statuses:", error);
-			res.status(500).send();
-		}
-	}
+    // Validate numberOfOpenPositions
+    const numberOfOpenPositionsError = validateNumberOfOpenPositions(body.numberOfOpenPositions, true);
+    if (numberOfOpenPositionsError) return { error: numberOfOpenPositionsError };
 
-	async createJobRole(req: Request, res: Response): Promise<void> {
-		try {
-			const body = req.body as CreateJobRoleBody;
+    // Validate location
+    const locationError = validateStringField(body.location, "Location", true);
+    if (locationError) return { error: locationError };
+    const locationTrimmed = body.location.trim();
 
-			// Validate required fields
-			if (!body.roleName || !body.roleName.trim()) {
-				res.status(400).json({ error: "Role name is required" });
-				return;
-			}
+    // Validate closingDate
+    const closingDateValidation = validateClosingDate(body.closingDate, true);
+    if (closingDateValidation.error) return { error: closingDateValidation.error };
+    const closingDate = closingDateValidation.parsedDate!;
 
-			if (!body.description || !body.description.trim()) {
-				res.status(400).json({ error: "Job spec summary is required" });
-				return;
-			}
+    // Validate capabilityId
+    const capabilityIdError = validateStringField(body.capabilityId, "Capability", true);
+    if (capabilityIdError) return { error: capabilityIdError };
+    const capabilityIdTrimmed = body.capabilityId.trim();
 
-			if (!body.sharepointUrl || !body.sharepointUrl.trim()) {
-				res.status(400).json({ error: "SharePoint link is required" });
-				return;
-			}
+    // Validate bandId
+    const bandIdError = validateStringField(body.bandId, "Band", true);
+    if (bandIdError) return { error: bandIdError };
+    const bandIdTrimmed = body.bandId.trim();
 
-			// Validate SharePoint URL format
-			try {
-				const parsedUrl = new URL(body.sharepointUrl);
-				if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
-					res.status(400).json({ error: "Invalid SharePoint URL format" });
-					return;
-				}
-			} catch {
-				res.status(400).json({ error: "Invalid SharePoint URL format" });
-				return;
-			}
+    return {
+      data: {
+        roleName: roleNameTrimmed,
+        description: descriptionTrimmed,
+        sharepointUrl: sharepointUrlTrimmed,
+        responsibilities: responsibilitiesTrimmed,
+        numberOfOpenPositions: body.numberOfOpenPositions,
+        location: locationTrimmed,
+        closingDate,
+        capabilityId: capabilityIdTrimmed,
+        bandId: bandIdTrimmed,
+      },
+    };
+  }
 
-			if (!body.responsibilities == null || !body.responsibilities.trim()) {
-				res.status(400).json({ error: "Responsibilities are required" });
-				return;
-			}
+  private validateUpdateFields(body: UpdateJobRoleBody): {
+    error?: string;
+    data?: {
+      roleName?: string;
+      description?: string;
+      sharepointUrl?: string;
+      responsibilities?: string;
+      numberOfOpenPositions?: number;
+      location?: string;
+      closingDate?: Date;
+      capabilityId?: string;
+      bandId?: string;
+      statusId?: string;
+    };
+  } {
+    // Validate at least one field is being updated
+    if (Object.keys(body).length === 0) {
+      return { error: "No fields to update" };
+    }
 
-			if (!body.numberOfOpenPositions || body.numberOfOpenPositions < 1) {
-				res
-					.status(400)
-					.json({ error: "Number of open positions must be at least 1" });
-				return;
-			}
+    // Validate roleName if provided
+    const roleNameError = validateStringField(body.roleName, "Role name", false);
+    if (roleNameError) return { error: roleNameError };
 
-			if (!body.location || !body.location.trim()) {
-				res.status(400).json({ error: "Location is required" });
-				return;
-			}
+    // Validate description if provided
+    const descriptionError = validateStringField(body.description, "Job spec summary", false);
+    if (descriptionError) return { error: descriptionError };
 
-			if (!body.closingDate) {
-				res.status(400).json({ error: "Closing date is required" });
-				return;
-			}
+    // Validate sharepointUrl if provided
+    const sharepointUrlError = validateSharePointUrl(body.sharepointUrl, false);
+    if (sharepointUrlError) return { error: sharepointUrlError };
 
-			// Validate closing date
-			const closingDate = new Date(body.closingDate);
-			if (Number.isNaN(closingDate.getTime())) {
-				res.status(400).json({ error: "Invalid closing date format" });
-				return;
-			}
+    // Validate responsibilities if provided
+    const responsibilitiesError = validateStringField(body.responsibilities, "Responsibilities", false);
+    if (responsibilitiesError) return { error: responsibilitiesError };
 
-			// Validate closing date is in the future
-			const today = new Date();
-			today.setHours(0, 0, 0, 0);
-			closingDate.setHours(0, 0, 0, 0);
-			if (closingDate <= today) {
-				res.status(400).json({ error: "Closing date must be in the future" });
-				return;
-			}
+    // Validate numberOfOpenPositions if provided
+    const numberOfOpenPositionsError = validateNumberOfOpenPositions(body.numberOfOpenPositions, false);
+    if (numberOfOpenPositionsError) return { error: numberOfOpenPositionsError };
 
-			if (!body.capabilityId || !body.capabilityId.trim()) {
-				res.status(400).json({ error: "Capability is required" });
-				return;
-			}
+    // Validate location if provided
+    const locationError = validateStringField(body.location, "Location", false);
+    if (locationError) return { error: locationError };
 
-			if (!body.bandId || !body.bandId.trim()) {
-				res.status(400).json({ error: "Band is required" });
-				return;
-			}
+    // Validate closingDate if provided
+    const closingDateValidation = validateClosingDate(body.closingDate, false);
+    if (closingDateValidation.error) return { error: closingDateValidation.error };
 
-			// Create the job role
-			const jobRole = await this.jobRoleService.createJobRole({
-				roleName: body.roleName.trim(),
-				description: body.description.trim(),
-				sharepointUrl: body.sharepointUrl.trim(),
-				responsibilities: body.responsibilities.trim(),
-				numberOfOpenPositions: body.numberOfOpenPositions,
-				location: body.location.trim(),
-				closingDate: closingDate,
-				capabilityId: body.capabilityId.trim(),
-				bandId: body.bandId.trim(),
-			});
+    // Validate capabilityId if provided
+    const capabilityIdError = validateStringField(body.capabilityId, "Capability", false);
+    if (capabilityIdError) return { error: capabilityIdError };
 
-			res.status(201).json(jobRole);
-		} catch (error) {
-			console.error("Error creating job role:", error);
+    // Validate bandId if provided
+    const bandIdError = validateStringField(body.bandId, "Band", false);
+    if (bandIdError) return { error: bandIdError };
 
-			// Check for foreign key constraint errors
-			if ((error as Error).message?.includes("Foreign key constraint")) {
-				res.status(400).json({ error: "Invalid capability or band selected" });
-				return;
-			}
+    // Validate statusId if provided
+    const statusIdError = validateStringField(body.statusId, "Status", false);
+    if (statusIdError) return { error: statusIdError };
 
-			res.status(500).json({ error: "Internal server error" });
-		}
-	}
+    // Build update object with trimmed values
+    const updateData: {
+      roleName?: string;
+      description?: string;
+      sharepointUrl?: string;
+      responsibilities?: string;
+      numberOfOpenPositions?: number;
+      location?: string;
+      closingDate?: Date;
+      capabilityId?: string;
+      bandId?: string;
+      statusId?: string;
+    } = {};
 
-	async updateJobRole(
-		req: Request<JobRoleParams>,
-		res: Response,
-	): Promise<void> {
-		const { id } = req.params;
+    if (body.roleName !== undefined) updateData.roleName = body.roleName.trim();
+    if (body.description !== undefined) updateData.description = body.description.trim();
+    if (body.sharepointUrl !== undefined) updateData.sharepointUrl = body.sharepointUrl.trim();
+    if (body.responsibilities !== undefined) updateData.responsibilities = body.responsibilities.trim();
+    if (body.numberOfOpenPositions !== undefined) updateData.numberOfOpenPositions = body.numberOfOpenPositions;
+    if (body.location !== undefined) updateData.location = body.location.trim();
+    if (closingDateValidation.parsedDate !== undefined) updateData.closingDate = closingDateValidation.parsedDate;
+    if (body.capabilityId !== undefined) updateData.capabilityId = body.capabilityId.trim();
+    if (body.bandId !== undefined) updateData.bandId = body.bandId.trim();
+    if (body.statusId !== undefined) updateData.statusId = body.statusId.trim();
 
-		try {
-			const body = req.body as UpdateJobRoleBody;
+    return { data: updateData };
+  }
 
-			// Validate at least one field is being updated
-			if (Object.keys(body).length === 0) {
-				res.status(400).json({ error: "No fields to update" });
-				return;
-			}
+  async getJobRoles(_req: Request, res: Response): Promise<void> {
+    try {
+      const jobRoles = await this.jobRoleService.getOpenJobRoles();
+      res.status(200).json(jobRoles);
+    } catch (error) {
+      console.error("Error fetching job roles:", error);
+      res.status(500).send();
+    }
+  }
 
-			// Validate roleName if provided
-			if (body.roleName !== undefined && !body.roleName.trim()) {
-				res.status(400).json({ error: "Role name cannot be empty" });
-				return;
-			}
+  async getJobRoleById(
+    req: Request<JobRoleParams>,
+    res: Response,
+  ): Promise<void> {
+    const { id } = req.params;
+    try {
+      const jobRole = await this.jobRoleService.getJobRoleById(id);
+      if (jobRole) {
+        res.status(200).json(jobRole);
+      } else {
+        res.status(404).send();
+      }
+    } catch (error) {
+      console.error(`Error fetching job role with id ${id}:`, error);
+      res.status(500).send();
+    }
+  }
 
-			// Validate description if provided
-			if (body.description !== undefined && !body.description.trim()) {
-				res.status(400).json({ error: "Job spec summary cannot be empty" });
-				return;
-			}
+  async getCapabilities(_req: Request, res: Response): Promise<void> {
+    try {
+      const capabilities = await this.jobRoleService.getAllCapabilities();
+      res.status(200).json(capabilities);
+    } catch (error) {
+      console.error("Error fetching capabilities:", error);
+      res.status(500).send();
+    }
+  }
 
-			// Validate SharePoint URL if provided
-			if (body.sharepointUrl !== undefined) {
-				if (!body.sharepointUrl.trim()) {
-					res.status(400).json({ error: "SharePoint link cannot be empty" });
-					return;
-				}
-				try {
-					const parsedUrl = new URL(body.sharepointUrl);
-					if (
-						parsedUrl.protocol !== "http:" &&
-						parsedUrl.protocol !== "https:"
-					) {
-						res.status(400).json({ error: "Invalid SharePoint URL format" });
-						return;
-					}
-				} catch {
-					res.status(400).json({ error: "Invalid SharePoint URL format" });
-					return;
-				}
-			}
+  async getBands(_req: Request, res: Response): Promise<void> {
+    try {
+      const bands = await this.jobRoleService.getAllBands();
+      res.status(200).json(bands);
+    } catch (error) {
+      console.error("Error fetching bands:", error);
+      res.status(500).send();
+    }
+  }
 
-			// Validate responsibilities if provided
-			if (
-				body.responsibilities !== undefined &&
-				!body.responsibilities.trim()
-			) {
-				res.status(400).json({ error: "Responsibilities cannot be empty" });
-				return;
-			}
+  async getStatuses(_req: Request, res: Response): Promise<void> {
+    try {
+      const statuses = await this.jobRoleService.getAllStatuses();
+      res.status(200).json(statuses);
+    } catch (error) {
+      console.error("Error fetching statuses:", error);
+      res.status(500).send();
+    }
+  }
 
-			// Validate numberOfOpenPositions if provided
-			if (
-				body.numberOfOpenPositions !== undefined &&
-				body.numberOfOpenPositions < 1
-			) {
-				res
-					.status(400)
-					.json({ error: "Number of open positions must be at least 1" });
-				return;
-			}
+  async createJobRole(req: Request, res: Response): Promise<void> {
+    try {
+      const body = req.body as CreateJobRoleBody;
 
-			// Validate location if provided
-			if (body.location !== undefined && !body.location.trim()) {
-				res.status(400).json({ error: "Location cannot be empty" });
-				return;
-			}
+      const validation = this.validateCreateFields(body);
+      if (validation.error) {
+        res.status(400).json({ error: validation.error });
+        return;
+      }
 
-			// Validate closing date if provided
-			let closingDate: Date | undefined;
-			if (body.closingDate !== undefined) {
-				closingDate = new Date(body.closingDate);
-				if (Number.isNaN(closingDate.getTime())) {
-					res.status(400).json({ error: "Invalid closing date format" });
-					return;
-				}
+      const jobRole = await this.jobRoleService.createJobRole(validation.data!);
+      res.status(201).json(jobRole);
+    } catch (error) {
+      console.error("Error creating job role:", error);
 
-				// Validate closing date is in the future
-				const today = new Date();
-				today.setHours(0, 0, 0, 0);
-				closingDate.setHours(0, 0, 0, 0);
-				if (closingDate <= today) {
-					res.status(400).json({ error: "Closing date must be in the future" });
-					return;
-				}
-			}
+      // Check for foreign key constraint errors
+      if ((error as Error).message?.includes("Foreign key constraint")) {
+        res.status(400).json({ error: "Invalid capability or band selected" });
+        return;
+      }
 
-			// Validate IDs if provided (basic validation - actual validation happens at DB level)
-			if (body.capabilityId !== undefined && !body.capabilityId.trim()) {
-				res.status(400).json({ error: "Capability cannot be empty" });
-				return;
-			}
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
 
-			if (body.bandId !== undefined && !body.bandId.trim()) {
-				res.status(400).json({ error: "Band cannot be empty" });
-				return;
-			}
+  async updateJobRole(
+    req: Request<JobRoleParams>,
+    res: Response,
+  ): Promise<void> {
+    const { id } = req.params;
 
-			if (body.statusId !== undefined && !body.statusId.trim()) {
-				res.status(400).json({ error: "Status cannot be empty" });
-				return;
-			}
+    try {
+      const body = req.body as UpdateJobRoleBody;
 
-			// Build update object
-			const updateData: {
-				roleName?: string;
-				description?: string;
-				sharepointUrl?: string;
-				responsibilities?: string;
-				numberOfOpenPositions?: number;
-				location?: string;
-				closingDate?: Date;
-				capabilityId?: string;
-				bandId?: string;
-				statusId?: string;
-			} = {};
+      const validation = this.validateUpdateFields(body);
+      if (validation.error) {
+        res.status(400).json({ error: validation.error });
+        return;
+      }
 
-			if (body.roleName !== undefined)
-				updateData.roleName = body.roleName.trim();
-			if (body.description !== undefined)
-				updateData.description = body.description.trim();
-			if (body.sharepointUrl !== undefined)
-				updateData.sharepointUrl = body.sharepointUrl.trim();
-			if (body.responsibilities !== undefined)
-				updateData.responsibilities = body.responsibilities.trim();
-			if (body.numberOfOpenPositions !== undefined)
-				updateData.numberOfOpenPositions = body.numberOfOpenPositions;
-			if (body.location !== undefined)
-				updateData.location = body.location.trim();
-			if (closingDate !== undefined) updateData.closingDate = closingDate;
-			if (body.capabilityId !== undefined)
-				updateData.capabilityId = body.capabilityId.trim();
-			if (body.bandId !== undefined) updateData.bandId = body.bandId.trim();
-			if (body.statusId !== undefined)
-				updateData.statusId = body.statusId.trim();
+      const updatedJobRole = await this.jobRoleService.updateJobRole(
+        id,
+        validation.data!,
+      );
 
-			// Update the job role
-			const updatedJobRole = await this.jobRoleService.updateJobRole(
-				id,
-				updateData,
-			);
+      if (!updatedJobRole) {
+        res.status(404).json({ error: "Job role not found" });
+        return;
+      }
 
-			if (!updatedJobRole) {
-				res.status(404).json({ error: "Job role not found" });
-				return;
-			}
+      res.status(200).json(updatedJobRole);
+    } catch (error) {
+      console.error(`Error updating job role with id ${id}:`, error);
 
-			res.status(200).json(updatedJobRole);
-		} catch (error) {
-			console.error(`Error updating job role with id ${id}:`, error);
+      // Check for foreign key constraint errors
+      if ((error as Error).message?.includes("Foreign key constraint")) {
+        res
+          .status(400)
+          .json({ error: "Invalid capability, band, or status selected" });
+        return;
+      }
 
-			// Check for foreign key constraint errors
-			if ((error as Error).message?.includes("Foreign key constraint")) {
-				res
-					.status(400)
-					.json({ error: "Invalid capability, band, or status selected" });
-				return;
-			}
-
-			res.status(500).json({ error: "Internal server error" });
-		}
-	}
+      res.status(500).json({ error: "Internal server error" });
+    }
+  }
 }

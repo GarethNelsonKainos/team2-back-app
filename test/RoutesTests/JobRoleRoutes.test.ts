@@ -193,8 +193,6 @@ describe("JobRole Routes - Integration Tests", () => {
 
 	afterEach(() => {
 		vi.restoreAllMocks();
-		getAllStatusesSpy.mockRestore();
-		updateJobRoleSpy.mockRestore();
 	});
 
 	const buildApp = () => {
