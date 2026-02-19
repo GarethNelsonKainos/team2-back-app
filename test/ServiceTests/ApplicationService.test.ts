@@ -74,7 +74,10 @@ describe("ApplicationService", () => {
 
 			await applicationService.createApplication(applicationData, mockFile);
 
-			expect(mockGenerateFileKey).toHaveBeenCalledWith("resume.pdf");
+			expect(mockGenerateFileKey).toHaveBeenCalledWith(
+				"resume.pdf",
+				"user-id-123",
+			);
 			expect(mockUploadFile).toHaveBeenCalledWith(
 				mockFile,
 				"uploads/resume-123.pdf",
@@ -102,7 +105,10 @@ describe("ApplicationService", () => {
 
 			await applicationService.createApplication(applicationData, mockFile);
 
-			expect(mockGenerateFileKey).toHaveBeenCalledWith("my-cv.docx");
+			expect(mockGenerateFileKey).toHaveBeenCalledWith(
+				"my-cv.docx",
+				"user-id-123",
+			);
 		});
 
 		it("should call uploadFile with file and generated key", async () => {

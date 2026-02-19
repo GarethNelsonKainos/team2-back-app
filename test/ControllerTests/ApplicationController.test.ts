@@ -9,7 +9,7 @@ import {
 } from "vitest";
 import type { Request, Response } from "express";
 import { ApplicationController } from "../../src/controllers/application.controller.js";
-import { ApplicationService } from "../../src/services/application.service.js";
+import type { ApplicationService } from "../../src/services/application.service.js";
 
 vi.mock("../../src/services/application.service.js");
 

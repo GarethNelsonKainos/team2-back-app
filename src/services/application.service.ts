@@ -16,7 +16,10 @@ export class ApplicationService {
 		applicationData: CreateApplicationRequest,
 		file: Express.Multer.File,
 	): Promise<void> {
-		const fileKey = this.s3Service.generateFileKey(file.originalname);
+		const fileKey = this.s3Service.generateFileKey(
+			file.originalname,
+			applicationData.userId,
+		);
 		const cvUrl = await this.s3Service.uploadFile(file, fileKey);
 
 		const application: JobApplication = {

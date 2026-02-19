@@ -163,7 +163,10 @@ describe("ApplicationRoutes - integration tests", () => {
 				});
 
 			expect(response.status).toBe(201);
-			expect(generateFileKeySpy).toHaveBeenCalledWith("resume.pdf");
+			expect(generateFileKeySpy).toHaveBeenCalledWith(
+				"resume.pdf",
+				mockUser.userId,
+			);
 			expect(uploadFileSpy).toHaveBeenCalled();
 			expect(createApplicationSpy).toHaveBeenCalledWith({
 				userId: mockUser.userId,
@@ -185,7 +188,10 @@ describe("ApplicationRoutes - integration tests", () => {
 				});
 
 			expect(response.status).toBe(201);
-			expect(generateFileKeySpy).toHaveBeenCalledWith("resume.docx");
+			expect(generateFileKeySpy).toHaveBeenCalledWith(
+				"resume.docx",
+				mockUser.userId,
+			);
 			expect(uploadFileSpy).toHaveBeenCalled();
 			expect(createApplicationSpy).toHaveBeenCalled();
 		});
@@ -201,7 +207,10 @@ describe("ApplicationRoutes - integration tests", () => {
 				});
 
 			expect(response.status).toBe(201);
-			expect(generateFileKeySpy).toHaveBeenCalledWith("resume.doc");
+			expect(generateFileKeySpy).toHaveBeenCalledWith(
+				"resume.doc",
+				mockUser.userId,
+			);
 			expect(uploadFileSpy).toHaveBeenCalled();
 			expect(createApplicationSpy).toHaveBeenCalled();
 		});

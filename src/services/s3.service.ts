@@ -60,9 +60,9 @@ export class S3Service {
 		}
 	}
 
-	generateFileKey(originalFilename: string, applicationId: string): string {
+	generateFileKey(originalFilename: string, userId: string): string {
 		const key = randomUUID();
 		const sanitizedFilename = originalFilename.replace(/\s+/g, "_");
-		return `applications/${applicationId}/${key}_${sanitizedFilename}`;
+		return `applications/${userId}/${key}_${sanitizedFilename}`;
 	}
 }
