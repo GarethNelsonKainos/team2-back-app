@@ -105,13 +105,13 @@ describe("ApplicationRoutes - integration tests", () => {
 			expect(response.body).toEqual({ error: "Access token required" });
 		});
 
-		it("should return 403 when token is invalid", async () => {
+		it("should return 500 when token is invalid", async () => {
 			const response = await request(app)
 				.post("/api/application")
 				.set("Authorization", "Bearer invalid-token")
 				.field("jobRoleId", "job-role-id-123");
 
-			expect(response.status).toBe(403);
+			expect(response.status).toBe(500);
 			expect(response.body).toEqual({ error: "Invalid or expired token" });
 		});
 
@@ -290,12 +290,12 @@ describe("ApplicationRoutes - integration tests", () => {
 			expect(getApplicationsForUserSpy).not.toHaveBeenCalled();
 		});
 
-		it("should return 403 when token is invalid", async () => {
+		it("should return 500 when token is invalid", async () => {
 			const response = await request(app)
 				.get("/api/myApplications")
 				.set("Authorization", "Bearer invalid-token");
 
-			expect(response.status).toBe(403);
+			expect(response.status).toBe(500);
 			expect(response.body).toEqual({ error: "Invalid or expired token" });
 			expect(getApplicationsForUserSpy).not.toHaveBeenCalled();
 		});

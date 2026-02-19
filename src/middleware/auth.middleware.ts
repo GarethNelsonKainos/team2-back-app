@@ -51,12 +51,3 @@ export default function authorisedRoles(allowedRoles: UserRole[]) {
 
 	};
 }
-
-export const authenticateToken = (
-	req: AuthRequest,
-	res: Response,
-	next: NextFunction,
-): void => {
-	// Get token from Authorisation header
-	
-};
