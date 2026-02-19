@@ -14,5 +14,11 @@ export default function applicationRouter(
 		handleUpload,
 		applicationController.createApplication.bind(applicationController),
 	);
+
+	router.get(
+		"/myApplications", 
+		authenticateToken, 
+		applicationController.getApplicationsForUser.bind(applicationController));
+
 	return router;
 }

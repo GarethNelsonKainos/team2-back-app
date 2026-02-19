@@ -35,4 +35,5 @@ export class ApplicationController {
 			res.status(500).send();
 		}
 	}
+
 }
