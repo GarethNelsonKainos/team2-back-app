@@ -692,4 +692,52 @@ describe("JobRole Routes - Integration Tests", () => {
 			expect(response.body).toEqual({ error: "Internal server error" });
 		});
 	});
+
+	describe("DELETE /job-roles/:id", () => {
+		let deleteJobRoleSpy: ReturnType<typeof vi.spyOn>;
+
+		beforeEach(() => {
+			deleteJobRoleSpy = vi
+				.spyOn(JobRoleDao.prototype, "deleteJobRole")
+				.mockResolvedValue(mockDaoResponse[0]);
+		});
+
+		it("should return 204 when job role is successfully deleted", async () => {
+			const app = buildApp();
+
+			const response = await request(app).delete(
+				"/job-roles/550e8400-e29b-41d4-a716-446655440000",
+			);
+
+			expect(response.status).toBe(204);
+			expect(response.body).toEqual({});
+			expect(deleteJobRoleSpy).toHaveBeenCalledWith(
+				"550e8400-e29b-41d4-a716-446655440000",
+			);
+		});
+
+		it("should return 404 when job role does not exist", async () => {
+			deleteJobRoleSpy.mockResolvedValueOnce(null);
+			const app = buildApp();
+
+			const response = await request(app).delete(
+				"/job-roles/550e8400-e29b-41d4-a716-446655440000",
+			);
+
+			expect(response.status).toBe(404);
+			expect(response.body).toEqual({ error: "Job role not found" });
+		});
+
+		it("should return 500 when the DAO throws an error", async () => {
+			deleteJobRoleSpy.mockRejectedValueOnce(new Error("Database error"));
+			const app = buildApp();
+
+			const response = await request(app).delete(
+				"/job-roles/550e8400-e29b-41d4-a716-446655440000",
+			);
+
+			expect(response.status).toBe(500);
+			expect(response.body).toEqual({ error: "Internal server error" });
+		});
+	});
 });

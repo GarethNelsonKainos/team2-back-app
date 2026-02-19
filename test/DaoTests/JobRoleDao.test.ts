@@ -11,6 +11,7 @@ vi.mock("../../src/daos/prisma.js", () => ({
 			findUnique: vi.fn(),
 			create: vi.fn(),
 			update: vi.fn(),
+			delete: vi.fn(),
 		},
 		capability: {
 			findMany: vi.fn(),
@@ -567,6 +568,61 @@ describe("JobRoleDao", () => {
 			);
 
 			expect(result?.numberOfOpenPositions).toBe(10);
+		});
+	});
+
+	describe("deleteJobRole", () => {
+		it("should call prisma.jobRole.delete with correct parameters and return deleted job role", async () => {
+			// Arrange
+			const mockDeletedJobRole: JobRole = {
+				jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+				roleName: "Software Engineer",
+				location: "Belfast",
+				closingDate: new Date("2026-03-15"),
+				description: null,
+				responsibilities: null,
+				sharepointUrl: null,
+				numberOfOpenPositions: null,
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				bandId: "770e8400-e29b-41d4-a716-446655440002",
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+			};
+			vi.mocked(prisma.jobRole.delete).mockResolvedValue(mockDeletedJobRole);
+
+			// Act
+			const result = await dao.deleteJobRole(
+				"550e8400-e29b-41d4-a716-446655440000",
+			);
+
+			// Assert
+			expect(prisma.jobRole.delete).toHaveBeenCalledOnce();
+			expect(prisma.jobRole.delete).toHaveBeenCalledWith({
+				where: { jobRoleId: "550e8400-e29b-41d4-a716-446655440000" },
+			});
+			expect(result).toEqual(mockDeletedJobRole);
+		});
+
+		it("should return null when job role does not exist", async () => {
+			// Arrange
+			const prismaError = { code: "P2025", message: "Record not found" };
+			vi.mocked(prisma.jobRole.delete).mockRejectedValueOnce(prismaError);
+
+			// Act
+			const result = await dao.deleteJobRole("non-existent-id");
+
+			// Assert
+			expect(result).toBeNull();
+		});
+
+		it("should propagate database errors other than record not found", async () => {
+			// Arrange
+			const dbError = new Error("Database connection failed");
+			vi.mocked(prisma.jobRole.delete).mockRejectedValue(dbError);
+
+			// Act & Assert
+			await expect(
+				dao.deleteJobRole("550e8400-e29b-41d4-a716-446655440000"),
+			).rejects.toThrow("Database connection failed");
 		});
 	});
 });

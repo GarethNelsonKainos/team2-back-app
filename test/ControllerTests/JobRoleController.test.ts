@@ -19,6 +19,7 @@ describe("JobRoleController", () => {
 	let mockCreateJobRole: any;
 	let mockGetAllStatuses: any;
 	let mockUpdateJobRole: any;
+	let mockDeleteJobRole: any;
 
 	const mockJobRoleResponse = [
 		{
@@ -111,6 +112,7 @@ describe("JobRoleController", () => {
 		mockCreateJobRole = vi.fn();
 		mockGetAllStatuses = vi.fn();
 		mockUpdateJobRole = vi.fn();
+		mockDeleteJobRole = vi.fn();
 
 		// Mock the Service class
 		JobRoleService.prototype.getOpenJobRoles = mockGetOpenJobRoles;
@@ -120,6 +122,7 @@ describe("JobRoleController", () => {
 		JobRoleService.prototype.createJobRole = mockCreateJobRole;
 		JobRoleService.prototype.getAllStatuses = mockGetAllStatuses;
 		JobRoleService.prototype.updateJobRole = mockUpdateJobRole;
+		JobRoleService.prototype.deleteJobRole = mockDeleteJobRole;
 
 		controller = new JobRoleController();
 	});
@@ -811,6 +814,94 @@ describe("JobRoleController", () => {
 			expect(mockResponse.status).toHaveBeenCalledWith(400);
 			expect(mockResponse.json).toHaveBeenCalledWith({
 				error: "Status cannot be empty",
+			});
+		});
+	});
+
+	describe("deleteJobRole", () => {
+		it("should return 204 No Content when deletion succeeds", async () => {
+			// Arrange
+			mockRequest.params = { id: "550e8400-e29b-41d4-a716-446655440000" };
+			const mockDeletedJobRole = {
+				jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+				roleName: "Software Engineer",
+				location: "Belfast",
+				closingDate: new Date("2026-03-15"),
+				description: null,
+				responsibilities: null,
+				sharepointUrl: null,
+				numberOfOpenPositions: null,
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				bandId: "770e8400-e29b-41d4-a716-446655440002",
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+			};
+			mockDeleteJobRole.mockResolvedValue(mockDeletedJobRole);
+
+			// Act
+			await controller.deleteJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockDeleteJobRole).toHaveBeenCalledOnce();
+			expect(mockDeleteJobRole).toHaveBeenCalledWith(
+				"550e8400-e29b-41d4-a716-446655440000",
+			);
+			expect(mockResponse.status).toHaveBeenCalledWith(204);
+			expect(mockResponse.send).toHaveBeenCalledOnce();
+		});
+
+		it("should return 404 when job role not found", async () => {
+			// Arrange
+			mockRequest.params = { id: "non-existent-id" };
+			mockDeleteJobRole.mockResolvedValue(null);
+
+			// Act
+			await controller.deleteJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockResponse.status).toHaveBeenCalledWith(404);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Job role not found",
+			});
+		});
+
+		it("should extract ID from request params correctly", async () => {
+			// Arrange
+			const testId = "test-id-12345";
+			mockRequest.params = { id: testId };
+			mockDeleteJobRole.mockResolvedValue({});
+
+			// Act
+			await controller.deleteJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockDeleteJobRole).toHaveBeenCalledWith(testId);
+		});
+
+		it("should return 500 when service throws an error", async () => {
+			// Arrange
+			mockRequest.params = { id: "550e8400-e29b-41d4-a716-446655440000" };
+			const error = new Error("Database error");
+			mockDeleteJobRole.mockRejectedValue(error);
+
+			// Act
+			await controller.deleteJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			// Assert
+			expect(mockResponse.status).toHaveBeenCalledWith(500);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Internal server error",
 			});
 		});
 	});
