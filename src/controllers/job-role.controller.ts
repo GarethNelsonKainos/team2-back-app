@@ -69,7 +69,9 @@ export class JobRoleController {
 				return;
 			}
 
-			const jobRole = await this.jobRoleService.createJobRole(validationResult.input);
+			const jobRole = await this.jobRoleService.createJobRole(
+				validationResult.input,
+			);
 
 			res.status(201).json(jobRole);
 		} catch (error) {

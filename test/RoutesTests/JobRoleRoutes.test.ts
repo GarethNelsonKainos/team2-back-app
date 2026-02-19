@@ -367,17 +367,19 @@ describe("JobRole Routes - Integration Tests", () => {
 			const response = await request(app).post("/job-roles").send({});
 
 			expect(response.status).toBe(400);
-			expect(response.body.errors).toEqual(expect.arrayContaining([
-				"Role name is required",
-				"Job spec summary is required",
-				"SharePoint link is required",
-				"Responsibilities are required",
-				"Number of open positions must be at least 1",
-				"Location is required",
-				"Closing date is required",
-				"Capability is required",
-				"Band is required",
-			]));
+			expect(response.body.errors).toEqual(
+				expect.arrayContaining([
+					"Role name is required",
+					"Job spec summary is required",
+					"SharePoint link is required",
+					"Responsibilities are required",
+					"Number of open positions must be at least 1",
+					"Location is required",
+					"Closing date is required",
+					"Capability is required",
+					"Band is required",
+				]),
+			);
 			expect(response.body.errors).toHaveLength(9);
 		});
 

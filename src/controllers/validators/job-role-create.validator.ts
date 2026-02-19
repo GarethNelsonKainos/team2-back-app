@@ -16,9 +16,15 @@ type ValidationResult =
 	| { errors: string[]; input?: undefined }
 	| { errors: []; input: CreateJobRoleInput };
 
-type RequiredStringField = Exclude<keyof CreateJobRoleInput, "numberOfOpenPositions" | "closingDate">;
+type RequiredStringField = Exclude<
+	keyof CreateJobRoleInput,
+	"numberOfOpenPositions" | "closingDate"
+>;
 
-const REQUIRED_STRING_FIELDS: Array<{ field: RequiredStringField; message: string }> = [
+const REQUIRED_STRING_FIELDS: Array<{
+	field: RequiredStringField;
+	message: string;
+}> = [
 	{ field: "roleName", message: "Role name is required" },
 	{ field: "description", message: "Job spec summary is required" },
 	{ field: "sharepointUrl", message: "SharePoint link is required" },
@@ -28,7 +34,8 @@ const REQUIRED_STRING_FIELDS: Array<{ field: RequiredStringField; message: strin
 	{ field: "bandId", message: "Band is required" },
 ];
 
-const NUMBER_OF_OPEN_POSITIONS_ERROR = "Number of open positions must be at least 1";
+const NUMBER_OF_OPEN_POSITIONS_ERROR =
+	"Number of open positions must be at least 1";
 
 const CLOSING_DATE_REQUIRED_ERROR = "Closing date is required";
 
@@ -70,7 +77,10 @@ function hasValidSharepointUrl(sharepointUrl: string): boolean {
 	}
 }
 
-function parseAndValidateClosingDate(closingDateString: string): { date?: Date; error?: string } {
+function parseAndValidateClosingDate(closingDateString: string): {
+	date?: Date;
+	error?: string;
+} {
 	const closingDate = new Date(closingDateString);
 	if (Number.isNaN(closingDate.getTime())) {
 		return { error: "Invalid closing date format" };
@@ -87,7 +97,10 @@ function parseAndValidateClosingDate(closingDateString: string): { date?: Date; 
 	return { date: closingDate };
 }
 
-function parseAndValidateOpenPositions(value: unknown): { numberOfOpenPositions?: number; error?: string } {
+function parseAndValidateOpenPositions(value: unknown): {
+	numberOfOpenPositions?: number;
+	error?: string;
+} {
 	const numberOfOpenPositions = Number(value);
 	if (
 		Number.isNaN(numberOfOpenPositions) ||
@@ -101,7 +114,9 @@ function parseAndValidateOpenPositions(value: unknown): { numberOfOpenPositions?
 	return { numberOfOpenPositions };
 }
 
-export function validateAndBuildCreateJobRoleInput(body: CreateJobRoleBody): ValidationResult {
+export function validateAndBuildCreateJobRoleInput(
+	body: CreateJobRoleBody,
+): ValidationResult {
 	const missingRequiredErrors = hasMissingRequiredFields(body);
 	if (missingRequiredErrors.length > 0) {
 		return { errors: missingRequiredErrors };
