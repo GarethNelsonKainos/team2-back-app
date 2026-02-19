@@ -1,9 +1,8 @@
-
 export enum ApplicationStatus {
-    IN_PROGRESS = "IN_PROGRESS",
+	IN_PROGRESS = "IN_PROGRESS",
 }
 
-export interface CreateApplicationRequest{
+export interface CreateApplicationRequest {
 	userId: string;
 	jobRoleId: string;
 }

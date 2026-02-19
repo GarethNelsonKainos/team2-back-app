@@ -1,4 +1,4 @@
-import { JobApplication } from "../types/CreateApplication";
+import type { JobApplication } from "../types/CreateApplication";
 import { prisma } from "./prisma";
 
 export class ApplicationDao {

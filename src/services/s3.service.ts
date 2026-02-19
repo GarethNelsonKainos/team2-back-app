@@ -6,11 +6,10 @@ export class S3Service {
 	private bucketName: string;
 
 	constructor() {
-
 		if (!process.env.S3_BUCKET_NAME) {
 			throw new Error("S3_BUCKET_NAME environment variable is not set");
 		}
-		
+
 		this.bucketName = process.env.S3_BUCKET_NAME;
 
 		const accessKeyId = process.env.AWS_ACCESS_KEY_ID;

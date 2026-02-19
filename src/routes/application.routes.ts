@@ -12,7 +12,7 @@ export default function applicationRouter(
 		"/application",
 		authenticateToken,
 		handleUpload,
-		applicationController.createApplication.bind(applicationController)
+		applicationController.createApplication.bind(applicationController),
 	);
 	return router;
 }

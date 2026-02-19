@@ -1,6 +1,10 @@
 import type { ApplicationDao } from "../daos/application.dao.js";
 import type { S3Service } from "./s3.service.js";
-import { ApplicationStatus, CreateApplicationRequest, JobApplication } from "../types/CreateApplication.js";
+import {
+	ApplicationStatus,
+	type CreateApplicationRequest,
+	type JobApplication,
+} from "../types/CreateApplication.js";
 
 export class ApplicationService {
 	constructor(
@@ -18,8 +22,8 @@ export class ApplicationService {
 		const application: JobApplication = {
 			...applicationData,
 			cvUrl: cvUrl,
-			status: ApplicationStatus.IN_PROGRESS
-		}
+			status: ApplicationStatus.IN_PROGRESS,
+		};
 
 		await this.applicationDao.createApplication(application);
 	}

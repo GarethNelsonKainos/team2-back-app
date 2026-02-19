@@ -1,5 +1,5 @@
 import multer from "multer";
-import express from "express";
+import type express from "express";
 
 const ALLOWED_MIMETYPES = [
 	"application/msword",
@@ -17,7 +17,11 @@ const fileFilter = (
 	cb: multer.FileFilterCallback,
 ) => {
 	if (!ALLOWED_MIMETYPES.includes(file.mimetype)) {
-		return cb(new Error("Invalid file type. Only .doc, .docx, and .pdf files are allowed."));
+		return cb(
+			new Error(
+				"Invalid file type. Only .doc, .docx, and .pdf files are allowed.",
+			),
+		);
 	}
 
 	const filename = file.originalname.toLowerCase();
@@ -26,7 +30,11 @@ const fileFilter = (
 	);
 
 	if (!hasValidExtension) {
-		return cb(new Error("Invalid file extension. Only .doc, .docx, and .pdf files are allowed."));
+		return cb(
+			new Error(
+				"Invalid file extension. Only .doc, .docx, and .pdf files are allowed.",
+			),
+		);
 	}
 
 	cb(null, true);
@@ -56,13 +64,11 @@ export const handleUpload = (
 	});
 };
 
-
-
 export const upload = multer({
 	storage,
 	fileFilter,
 	limits: {
-		fileSize: TEN_MEGABYTES, 
+		fileSize: TEN_MEGABYTES,
 	},
 });
 

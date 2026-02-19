@@ -1,6 +1,6 @@
-import { Request, Response } from "express";
-import { ApplicationService } from "../services/application.service";
-import { CreateApplicationRequest } from "../types/CreateApplication";
+import type { Request, Response } from "express";
+import type { ApplicationService } from "../services/application.service";
+import type { CreateApplicationRequest } from "../types/CreateApplication";
 
 export class ApplicationController {
 	private applicationService: ApplicationService;
