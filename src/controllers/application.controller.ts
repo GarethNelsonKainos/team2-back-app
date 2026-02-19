@@ -18,6 +18,10 @@ export class ApplicationController {
 			return;
 		}
 
+		if (applicationData.jobRoleId === undefined || applicationData.jobRoleId === null) {
+			res.status(400).json({ error: "jobRoleId is required" });
+			return;
+		}
 		applicationData.userId = res.locals.user.userId;
 
 		try {

@@ -74,7 +74,7 @@ describe("ApplicationController", () => {
 	});
 
 	describe("createApplication", () => {
-		it("should return a 400 status if file doesnt exist", async () => {
+		it("should return a 400 status if file doesn't exist", async () => {
 			mockRequest.body = {
 				jobRoleId: "test-job-role-id",
 			};

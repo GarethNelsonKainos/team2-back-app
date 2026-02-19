@@ -56,14 +56,13 @@ export class S3Service {
 			return fileUrl;
 		} catch (error) {
 			console.error("Error uploading file to S3:", error);
-			throw new Error(`Failed to upload file to S3: ${error}`);
+			throw new Error("Failed to upload file to S3");
 		}
 	}
 
-	generateFileKey(originalFilename: string, applicationId?: string): string {
-		const key = randomUUID;
+	generateFileKey(originalFilename: string, applicationId: string): string {
+		const key = randomUUID();
 		const sanitizedFilename = originalFilename.replace(/\s+/g, "_");
-		const appId = applicationId || `temp-${Date.now()}`;
-		return `applications/${appId}/${key}_${sanitizedFilename}`;
+		return `applications/${applicationId}/${key}_${sanitizedFilename}`;
 	}
 }
