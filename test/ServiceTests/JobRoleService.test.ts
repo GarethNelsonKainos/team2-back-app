@@ -13,6 +13,8 @@ describe("JobRoleService", () => {
 	let mockGetAllCapabilities: any;
 	let mockGetAllBands: any;
 	let mockCreateJobRole: any;
+	let mockGetAllStatuses: any;
+	let mockUpdateJobRole: any;
 
 	const mockDaoResponse = [
 		{
@@ -40,6 +42,50 @@ describe("JobRoleService", () => {
 		},
 	];
 
+	const mockStatusesResponse = [
+		{
+			statusId: "880e8400-e29b-41d4-a716-446655440003",
+			statusName: "Open",
+		},
+		{
+			statusId: "880e8400-e29b-41d4-a716-446655440004",
+			statusName: "Closed",
+		},
+		{
+			statusId: "880e8400-e29b-41d4-a716-446655440005",
+			statusName: "In Progress",
+		},
+	];
+
+	const mockUpdatedJobRole = {
+		jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+		roleName: "Updated Software Engineer",
+		location: "London",
+		closingDate: new Date("2026-04-30"),
+		description: "Updated description",
+		responsibilities: "Updated responsibilities",
+		sharepointUrl: "https://updated-link.com",
+		numberOfOpenPositions: 5,
+		capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+		bandId: "770e8400-e29b-41d4-a716-446655440002",
+		statusId: "880e8400-e29b-41d4-a716-446655440004",
+		capability: {
+			capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+			capabilityName: "Engineering",
+			jobRoles: [],
+		},
+		band: {
+			bandId: "770e8400-e29b-41d4-a716-446655440002",
+			bandName: "Consultant",
+			jobRoles: [],
+		},
+		status: {
+			statusId: "880e8400-e29b-41d4-a716-446655440004",
+			statusName: "Closed",
+			jobRoles: [],
+		},
+	};
+
 	beforeEach(() => {
 		// Create mock function for DAO method
 		mockGetOpenJobRoles = vi.fn().mockResolvedValue(mockDaoResponse);
@@ -47,6 +93,8 @@ describe("JobRoleService", () => {
 		mockGetAllCapabilities = vi.fn();
 		mockGetAllBands = vi.fn();
 		mockCreateJobRole = vi.fn();
+		mockGetAllStatuses = vi.fn();
+		mockUpdateJobRole = vi.fn();
 
 		// Mock the DAO class
 		JobRoleDao.prototype.getOpenJobRoles = mockGetOpenJobRoles;
@@ -54,6 +102,8 @@ describe("JobRoleService", () => {
 		JobRoleDao.prototype.getAllCapabilities = mockGetAllCapabilities;
 		JobRoleDao.prototype.getAllBands = mockGetAllBands;
 		JobRoleDao.prototype.createJobRole = mockCreateJobRole;
+		JobRoleDao.prototype.getAllStatuses = mockGetAllStatuses;
+		JobRoleDao.prototype.updateJobRole = mockUpdateJobRole;
 
 		service = new JobRoleService();
 	});
@@ -229,6 +279,96 @@ describe("JobRoleService", () => {
 			// Assert
 			expect(result).toEqual(mockCreatedJobRole);
 			expect(mockCreateJobRole).toHaveBeenCalledWith(mockInput);
+		});
+	});
+
+	describe("getAllStatuses", () => {
+		it("should return all statuses from DAO", async () => {
+			mockGetAllStatuses.mockResolvedValue(mockStatusesResponse);
+
+			const result = await service.getAllStatuses();
+
+			expect(result).toEqual(mockStatusesResponse);
+			expect(result).toHaveLength(3);
+		});
+
+		it("should call DAO getAllStatuses method", async () => {
+			mockGetAllStatuses.mockResolvedValue(mockStatusesResponse);
+
+			await service.getAllStatuses();
+
+			expect(mockGetAllStatuses).toHaveBeenCalledTimes(1);
+		});
+
+		it("should return empty array when no statuses exist", async () => {
+			mockGetAllStatuses.mockResolvedValue([]);
+
+			const result = await service.getAllStatuses();
+
+			expect(result).toEqual([]);
+		});
+	});
+
+	describe("updateJobRole", () => {
+		it("should return updated job role from DAO", async () => {
+			const updateInput = {
+				roleName: "Updated Software Engineer",
+				location: "London",
+			};
+			mockUpdateJobRole.mockResolvedValue(mockUpdatedJobRole);
+
+			const result = await service.updateJobRole(
+				"550e8400-e29b-41d4-a716-446655440000",
+				updateInput,
+			);
+
+			expect(result).toEqual(mockUpdatedJobRole);
+		});
+
+		it("should call DAO updateJobRole with correct parameters", async () => {
+			const updateInput = {
+				roleName: "Updated Software Engineer",
+				location: "London",
+			};
+			mockUpdateJobRole.mockResolvedValue(mockUpdatedJobRole);
+
+			await service.updateJobRole(
+				"550e8400-e29b-41d4-a716-446655440000",
+				updateInput,
+			);
+
+			expect(mockUpdateJobRole).toHaveBeenCalledWith(
+				"550e8400-e29b-41d4-a716-446655440000",
+				updateInput,
+			);
+		});
+
+		it("should return null when job role not found", async () => {
+			const updateInput = { roleName: "Updated Name" };
+			mockUpdateJobRole.mockResolvedValue(null);
+
+			const result = await service.updateJobRole(
+				"non-existent-id",
+				updateInput,
+			);
+
+			expect(result).toBeNull();
+		});
+
+		it("should handle partial updates", async () => {
+			const updateInput = { numberOfOpenPositions: 10 };
+			mockUpdateJobRole.mockResolvedValue({
+				...mockUpdatedJobRole,
+				numberOfOpenPositions: 10,
+			});
+
+			const result = await service.updateJobRole(
+				"550e8400-e29b-41d4-a716-446655440000",
+				updateInput,
+			);
+
+			expect(result).toBeDefined();
+			expect(result?.numberOfOpenPositions).toBe(10);
 		});
 	});
 });
