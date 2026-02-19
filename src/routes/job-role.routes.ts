@@ -20,6 +20,13 @@ router.get(
 
 router.get("/bands", jobRoleController.getBands.bind(jobRoleController));
 
+router.get("/statuses", jobRoleController.getStatuses.bind(jobRoleController));
+
+router.put(
+	"/job-roles/:id",
+	jobRoleController.updateJobRole.bind(jobRoleController),
+);
+
 router.post(
 	"/job-roles",
 	jobRoleController.createJobRole.bind(jobRoleController),

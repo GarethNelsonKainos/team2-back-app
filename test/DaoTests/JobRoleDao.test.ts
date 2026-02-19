@@ -10,6 +10,7 @@ vi.mock("../../src/daos/prisma.js", () => ({
 			findMany: vi.fn(),
 			findUnique: vi.fn(),
 			create: vi.fn(),
+			update: vi.fn(),
 		},
 		capability: {
 			findMany: vi.fn(),
@@ -19,6 +20,7 @@ vi.mock("../../src/daos/prisma.js", () => ({
 		},
 		status: {
 			findFirst: vi.fn(),
+			findMany: vi.fn(),
 		},
 	},
 }));
@@ -312,6 +314,259 @@ describe("JobRoleDao", () => {
 					bandId: "band-1",
 				}),
 			).rejects.toThrow("Open status not found in database");
+		});
+	});
+
+	describe("getAllStatuses", () => {
+		it("should call prisma.status.findMany with correct orderBy parameter", async () => {
+			const mockStatuses = [
+				{ statusId: "1", statusName: "Closed" },
+				{ statusId: "2", statusName: "In Progress" },
+				{ statusId: "3", statusName: "Open" },
+			];
+			const mockFindMany = vi.mocked(prisma.status.findMany);
+			mockFindMany.mockResolvedValue(mockStatuses);
+
+			await dao.getAllStatuses();
+
+			expect(mockFindMany).toHaveBeenCalledWith({
+				orderBy: {
+					statusName: "asc",
+				},
+			});
+		});
+
+		it("should return statuses ordered by name", async () => {
+			const mockStatuses = [
+				{ statusId: "1", statusName: "Closed" },
+				{ statusId: "2", statusName: "In Progress" },
+				{ statusId: "3", statusName: "Open" },
+			];
+			const mockFindMany = vi.mocked(prisma.status.findMany);
+			mockFindMany.mockResolvedValue(mockStatuses);
+
+			const result = await dao.getAllStatuses();
+
+			expect(result).toEqual(mockStatuses);
+			expect(result).toHaveLength(3);
+		});
+
+		it("should return empty array when no statuses exist", async () => {
+			const mockFindMany = vi.mocked(prisma.status.findMany);
+			mockFindMany.mockResolvedValue([]);
+
+			const result = await dao.getAllStatuses();
+
+			expect(result).toEqual([]);
+		});
+	});
+
+	describe("updateJobRole", () => {
+		it("should check if job role exists before updating", async () => {
+			const mockFindUnique = vi.mocked(prisma.jobRole.findUnique);
+			const mockUpdate = vi.mocked(prisma.jobRole.update);
+
+			mockFindUnique.mockResolvedValue({
+				jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+				roleName: "Software Engineer",
+				location: "Belfast",
+				closingDate: new Date("2026-03-15"),
+				description: null,
+				responsibilities: null,
+				sharepointUrl: null,
+				numberOfOpenPositions: null,
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				bandId: "770e8400-e29b-41d4-a716-446655440002",
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+			});
+
+			mockUpdate.mockResolvedValue({
+				jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+				roleName: "Updated Engineer",
+				location: "Belfast",
+				closingDate: new Date("2026-03-15"),
+				description: null,
+				responsibilities: null,
+				sharepointUrl: null,
+				numberOfOpenPositions: null,
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				bandId: "770e8400-e29b-41d4-a716-446655440002",
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+			});
+
+			await dao.updateJobRole("550e8400-e29b-41d4-a716-446655440000", {
+				roleName: "Updated Engineer",
+			});
+
+			expect(mockFindUnique).toHaveBeenCalledWith({
+				where: { jobRoleId: "550e8400-e29b-41d4-a716-446655440000" },
+			});
+		});
+
+		it("should return null when job role does not exist", async () => {
+			const mockFindUnique = vi.mocked(prisma.jobRole.findUnique);
+			mockFindUnique.mockResolvedValue(null);
+
+			const result = await dao.updateJobRole("non-existent-id", {
+				roleName: "Updated Name",
+			});
+
+			expect(result).toBeNull();
+		});
+
+		it("should call prisma.jobRole.update with correct parameters", async () => {
+			const mockFindUnique = vi.mocked(prisma.jobRole.findUnique);
+			const mockUpdate = vi.mocked(prisma.jobRole.update);
+
+			mockFindUnique.mockResolvedValue({
+				jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+				roleName: "Software Engineer",
+				location: "Belfast",
+				closingDate: new Date("2026-03-15"),
+				description: null,
+				responsibilities: null,
+				sharepointUrl: null,
+				numberOfOpenPositions: null,
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				bandId: "770e8400-e29b-41d4-a716-446655440002",
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+			});
+
+			const updateInput = {
+				roleName: "Updated Engineer",
+				location: "London",
+			};
+
+			mockUpdate.mockResolvedValue({
+				jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+				roleName: "Updated Engineer",
+				location: "London",
+				closingDate: new Date("2026-03-15"),
+				description: null,
+				responsibilities: null,
+				sharepointUrl: null,
+				numberOfOpenPositions: null,
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				bandId: "770e8400-e29b-41d4-a716-446655440002",
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+			});
+
+			await dao.updateJobRole(
+				"550e8400-e29b-41d4-a716-446655440000",
+				updateInput,
+			);
+
+			expect(mockUpdate).toHaveBeenCalledWith({
+				where: { jobRoleId: "550e8400-e29b-41d4-a716-446655440000" },
+				data: updateInput,
+				include: {
+					capability: true,
+					band: true,
+					status: true,
+				},
+			});
+		});
+
+		it("should return updated job role with relations", async () => {
+			const mockFindUnique = vi.mocked(prisma.jobRole.findUnique);
+			const mockUpdate = vi.mocked(prisma.jobRole.update);
+
+			mockFindUnique.mockResolvedValue({
+				jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+				roleName: "Software Engineer",
+				location: "Belfast",
+				closingDate: new Date("2026-03-15"),
+				description: null,
+				responsibilities: null,
+				sharepointUrl: null,
+				numberOfOpenPositions: null,
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				bandId: "770e8400-e29b-41d4-a716-446655440002",
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+			});
+
+			const mockUpdatedJobRole: any = {
+				jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+				roleName: "Updated Engineer",
+				location: "London",
+				closingDate: new Date("2026-03-15"),
+				description: null,
+				responsibilities: null,
+				sharepointUrl: null,
+				numberOfOpenPositions: null,
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				bandId: "770e8400-e29b-41d4-a716-446655440002",
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+				capability: {
+					capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+					capabilityName: "Engineering",
+				},
+				band: {
+					bandId: "770e8400-e29b-41d4-a716-446655440002",
+					bandName: "Consultant",
+				},
+				status: {
+					statusId: "880e8400-e29b-41d4-a716-446655440003",
+					statusName: "Open",
+				},
+			};
+
+			mockUpdate.mockResolvedValue(mockUpdatedJobRole);
+
+			const result = await dao.updateJobRole(
+				"550e8400-e29b-41d4-a716-446655440000",
+				{
+					roleName: "Updated Engineer",
+					location: "London",
+				},
+			);
+
+			expect(result).toEqual(mockUpdatedJobRole);
+			expect((result as any)?.capability).toBeDefined();
+			expect((result as any)?.band).toBeDefined();
+			expect((result as any)?.status).toBeDefined();
+		});
+
+		it("should handle partial updates with single field", async () => {
+			const mockFindUnique = vi.mocked(prisma.jobRole.findUnique);
+			const mockUpdate = vi.mocked(prisma.jobRole.update);
+
+			mockFindUnique.mockResolvedValue({
+				jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+				roleName: "Software Engineer",
+				location: "Belfast",
+				closingDate: new Date("2026-03-15"),
+				description: null,
+				responsibilities: null,
+				sharepointUrl: null,
+				numberOfOpenPositions: null,
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				bandId: "770e8400-e29b-41d4-a716-446655440002",
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+			});
+
+			mockUpdate.mockResolvedValue({
+				jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+				roleName: "Software Engineer",
+				location: "Belfast",
+				closingDate: new Date("2026-03-15"),
+				description: null,
+				responsibilities: null,
+				sharepointUrl: null,
+				numberOfOpenPositions: 10,
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				bandId: "770e8400-e29b-41d4-a716-446655440002",
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+			});
+
+			const result = await dao.updateJobRole(
+				"550e8400-e29b-41d4-a716-446655440000",
+				{
+					numberOfOpenPositions: 10,
+				},
+			);
+
+			expect(result?.numberOfOpenPositions).toBe(10);
 		});
 	});
 });

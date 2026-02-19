@@ -10,6 +10,8 @@ describe("JobRole Routes - Integration Tests", () => {
 	let getAllCapabilitiesSpy: ReturnType<typeof vi.spyOn>;
 	let getAllBandsSpy: ReturnType<typeof vi.spyOn>;
 	let createJobRoleSpy: ReturnType<typeof vi.spyOn>;
+	let getAllStatusesSpy: ReturnType<typeof vi.spyOn>;
+	let updateJobRoleSpy: ReturnType<typeof vi.spyOn>;
 
 	// Mock data at the DAO level (database boundary)
 	// Mock data matching Prisma's return structure
@@ -69,6 +71,21 @@ describe("JobRole Routes - Integration Tests", () => {
 				statusName: "Open",
 				jobRoles: [],
 			},
+		},
+	];
+
+	const mockStatusesResponse = [
+		{
+			statusId: "880e8400-e29b-41d4-a716-446655440003",
+			statusName: "Open",
+		},
+		{
+			statusId: "880e8400-e29b-41d4-a716-446655440004",
+			statusName: "Closed",
+		},
+		{
+			statusId: "880e8400-e29b-41d4-a716-446655440005",
+			statusName: "In Progress",
 		},
 	];
 
@@ -170,6 +187,8 @@ describe("JobRole Routes - Integration Tests", () => {
 		createJobRoleSpy = vi
 			.spyOn(JobRoleDao.prototype, "createJobRole")
 			.mockResolvedValue(mockDaoResponse[0]);
+		getAllStatusesSpy = vi.spyOn(JobRoleDao.prototype, "getAllStatuses");
+		updateJobRoleSpy = vi.spyOn(JobRoleDao.prototype, "updateJobRole");
 	});
 
 	afterEach(() => {
@@ -456,6 +475,236 @@ describe("JobRole Routes - Integration Tests", () => {
 			const response = await request(app).post("/job-roles").send(newJobRole);
 
 			expect(response.status).toBe(500);
+		});
+	});
+
+	describe("GET /statuses", () => {
+		it("should return 200 and list of statuses", async () => {
+			getAllStatusesSpy.mockResolvedValue(mockStatusesResponse);
+
+			const app = express();
+			app.use(express.json());
+			app.use(jobRoleRouter);
+
+			const response = await request(app).get("/statuses");
+
+			expect(response.status).toBe(200);
+			expect(response.body).toEqual(mockStatusesResponse);
+			expect(getAllStatusesSpy).toHaveBeenCalledOnce();
+		});
+
+		it("should return 500 when DAO throws an error", async () => {
+			getAllStatusesSpy.mockRejectedValue(new Error("Database error"));
+
+			const app = express();
+			app.use(express.json());
+			app.use(jobRoleRouter);
+
+			const response = await request(app).get("/statuses");
+
+			expect(response.status).toBe(500);
+		});
+
+		it("should return empty array when no statuses exist", async () => {
+			getAllStatusesSpy.mockResolvedValue([]);
+
+			const app = express();
+			app.use(express.json());
+			app.use(jobRoleRouter);
+
+			const response = await request(app).get("/statuses");
+
+			expect(response.status).toBe(200);
+			expect(response.body).toEqual([]);
+		});
+	});
+
+	describe("PUT /job-roles/:id", () => {
+		const validUpdateData = {
+			roleName: "Updated Software Engineer",
+			location: "London",
+		};
+
+		it("should return 200 and updated job role on successful update", async () => {
+			const mockUpdatedJobRole = {
+				...mockDaoResponse[0],
+				roleName: "Updated Software Engineer",
+				location: "London",
+			};
+
+			updateJobRoleSpy.mockResolvedValue(mockUpdatedJobRole);
+
+			const app = express();
+			app.use(express.json());
+			app.use(jobRoleRouter);
+
+			const response = await request(app)
+				.put("/job-roles/550e8400-e29b-41d4-a716-446655440000")
+				.send(validUpdateData);
+
+			expect(response.status).toBe(200);
+			expect(response.body.roleName).toBe("Updated Software Engineer");
+			expect(response.body.location).toBe("London");
+			expect(updateJobRoleSpy).toHaveBeenCalledWith(
+				"550e8400-e29b-41d4-a716-446655440000",
+				expect.objectContaining({
+					roleName: "Updated Software Engineer",
+					location: "London",
+				}),
+			);
+		});
+
+		it("should return 404 when job role not found", async () => {
+			updateJobRoleSpy.mockResolvedValue(null);
+
+			const app = express();
+			app.use(express.json());
+			app.use(jobRoleRouter);
+
+			const response = await request(app)
+				.put("/job-roles/non-existent-id")
+				.send(validUpdateData);
+
+			expect(response.status).toBe(404);
+			expect(response.body).toEqual({ error: "Job role not found" });
+		});
+
+		it("should return 400 when no fields provided", async () => {
+			const app = express();
+			app.use(express.json());
+			app.use(jobRoleRouter);
+
+			const response = await request(app)
+				.put("/job-roles/550e8400-e29b-41d4-a716-446655440000")
+				.send({});
+
+			expect(response.status).toBe(400);
+			expect(response.body).toEqual({ error: "No fields to update" });
+		});
+
+		it("should return 400 when role name is empty", async () => {
+			const app = express();
+			app.use(express.json());
+			app.use(jobRoleRouter);
+
+			const response = await request(app)
+				.put("/job-roles/550e8400-e29b-41d4-a716-446655440000")
+				.send({ roleName: "" });
+
+			expect(response.status).toBe(400);
+			expect(response.body).toEqual({ error: "Role name cannot be empty" });
+		});
+
+		it("should return 400 when SharePoint URL is invalid", async () => {
+			const app = express();
+			app.use(express.json());
+			app.use(jobRoleRouter);
+
+			const response = await request(app)
+				.put("/job-roles/550e8400-e29b-41d4-a716-446655440000")
+				.send({ sharepointUrl: "not-a-valid-url" });
+
+			expect(response.status).toBe(400);
+			expect(response.body).toEqual({ error: "Invalid SharePoint URL format" });
+		});
+
+		it("should return 400 when numberOfOpenPositions is less than 1", async () => {
+			const app = express();
+			app.use(express.json());
+			app.use(jobRoleRouter);
+
+			const response = await request(app)
+				.put("/job-roles/550e8400-e29b-41d4-a716-446655440000")
+				.send({ numberOfOpenPositions: 0 });
+
+			expect(response.status).toBe(400);
+			expect(response.body).toEqual({
+				error: "Number of open positions must be at least 1",
+			});
+		});
+
+		it("should return 400 when closing date is in the past", async () => {
+			const app = express();
+			app.use(express.json());
+			app.use(jobRoleRouter);
+
+			const response = await request(app)
+				.put("/job-roles/550e8400-e29b-41d4-a716-446655440000")
+				.send({ closingDate: "2025-01-01" });
+
+			expect(response.status).toBe(400);
+			expect(response.body).toEqual({
+				error: "Closing date must be in the future",
+			});
+		});
+
+		it("should return 400 when closing date format is invalid", async () => {
+			const app = express();
+			app.use(express.json());
+			app.use(jobRoleRouter);
+
+			const response = await request(app)
+				.put("/job-roles/550e8400-e29b-41d4-a716-446655440000")
+				.send({ closingDate: "not-a-date" });
+
+			expect(response.status).toBe(400);
+			expect(response.body).toEqual({ error: "Invalid closing date format" });
+		});
+
+		it("should handle partial update with valid data", async () => {
+			const mockUpdatedJobRole = {
+				...mockDaoResponse[0],
+				numberOfOpenPositions: 10,
+			};
+
+			updateJobRoleSpy.mockResolvedValue(mockUpdatedJobRole);
+
+			const app = express();
+			app.use(express.json());
+			app.use(jobRoleRouter);
+
+			const response = await request(app)
+				.put("/job-roles/550e8400-e29b-41d4-a716-446655440000")
+				.send({ numberOfOpenPositions: 10 });
+
+			expect(response.status).toBe(200);
+			expect(response.body.numberOfOpenPositions).toBe(10);
+		});
+
+		it("should return 400 when DAO throws foreign key constraint error", async () => {
+			updateJobRoleSpy.mockRejectedValue(
+				new Error("Foreign key constraint failed"),
+			);
+
+			const app = express();
+			app.use(express.json());
+			app.use(jobRoleRouter);
+
+			const response = await request(app)
+				.put("/job-roles/550e8400-e29b-41d4-a716-446655440000")
+				.send({ statusId: "invalid-id" });
+
+			expect(response.status).toBe(400);
+			expect(response.body).toEqual({
+				error: "Invalid capability, band, or status selected",
+			});
+		});
+
+		it("should return 500 when DAO throws unexpected error", async () => {
+			updateJobRoleSpy.mockRejectedValue(
+				new Error("Unexpected database error"),
+			);
+
+			const app = express();
+			app.use(express.json());
+			app.use(jobRoleRouter);
+
+			const response = await request(app)
+				.put("/job-roles/550e8400-e29b-41d4-a716-446655440000")
+				.send(validUpdateData);
+
+			expect(response.status).toBe(500);
+			expect(response.body).toEqual({ error: "Internal server error" });
 		});
 	});
 });

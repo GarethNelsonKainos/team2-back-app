@@ -18,6 +18,8 @@ describe("JobRoleController", () => {
 	let mockGetAllCapabilities: any;
 	let mockGetAllBands: any;
 	let mockCreateJobRole: any;
+	let mockGetAllStatuses: any;
+	let mockUpdateJobRole: any;
 
 	const mockJobRoleResponse = [
 		{
@@ -50,6 +52,50 @@ describe("JobRoleController", () => {
 		},
 	];
 
+	const mockStatusesResponse = [
+		{
+			statusId: "880e8400-e29b-41d4-a716-446655440003",
+			statusName: "Open",
+		},
+		{
+			statusId: "880e8400-e29b-41d4-a716-446655440004",
+			statusName: "Closed",
+		},
+		{
+			statusId: "880e8400-e29b-41d4-a716-446655440005",
+			statusName: "In Progress",
+		},
+	];
+
+	const mockUpdatedJobRole = {
+		jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+		roleName: "Updated Software Engineer",
+		location: "London",
+		closingDate: new Date("2026-04-30"),
+		description: "Updated description",
+		responsibilities: "Updated responsibilities",
+		sharepointUrl: "https://updated-link.com",
+		numberOfOpenPositions: 5,
+		capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+		bandId: "770e8400-e29b-41d4-a716-446655440002",
+		statusId: "880e8400-e29b-41d4-a716-446655440004",
+		capability: {
+			capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+			capabilityName: "Engineering",
+			jobRoles: [],
+		},
+		band: {
+			bandId: "770e8400-e29b-41d4-a716-446655440002",
+			bandName: "Consultant",
+			jobRoles: [],
+		},
+		status: {
+			statusId: "880e8400-e29b-41d4-a716-446655440004",
+			statusName: "Closed",
+			jobRoles: [],
+		},
+	};
+
 	beforeEach(() => {
 		// Create mock request and response
 		mockRequest = {};
@@ -64,6 +110,8 @@ describe("JobRoleController", () => {
 		mockGetAllCapabilities = vi.fn();
 		mockGetAllBands = vi.fn();
 		mockCreateJobRole = vi.fn();
+		mockGetAllStatuses = vi.fn();
+		mockUpdateJobRole = vi.fn();
 
 		// Mock the Service class
 		JobRoleService.prototype.getOpenJobRoles = mockGetOpenJobRoles;
@@ -71,6 +119,8 @@ describe("JobRoleController", () => {
 		JobRoleService.prototype.getAllCapabilities = mockGetAllCapabilities;
 		JobRoleService.prototype.getAllBands = mockGetAllBands;
 		JobRoleService.prototype.createJobRole = mockCreateJobRole;
+		JobRoleService.prototype.getAllStatuses = mockGetAllStatuses;
+		JobRoleService.prototype.updateJobRole = mockUpdateJobRole;
 
 		controller = new JobRoleController();
 	});
@@ -566,6 +616,325 @@ describe("JobRoleController", () => {
 			expect(mockCreateJobRole).not.toHaveBeenCalled();
 
 			validatorSpy.mockRestore();
+		});
+	});
+
+	describe("getStatuses", () => {
+		it("should return 200 status with statuses data", async () => {
+			mockGetAllStatuses.mockResolvedValue(mockStatusesResponse);
+
+			await controller.getStatuses(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(200);
+			expect(mockResponse.json).toHaveBeenCalledWith(mockStatusesResponse);
+		});
+
+		it("should call service getAllStatuses method", async () => {
+			mockGetAllStatuses.mockResolvedValue(mockStatusesResponse);
+
+			await controller.getStatuses(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(mockGetAllStatuses).toHaveBeenCalledTimes(1);
+		});
+
+		it("should return 500 status when service throws an error", async () => {
+			const error = new Error("Service error");
+			mockGetAllStatuses.mockRejectedValue(error);
+
+			await controller.getStatuses(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(500);
+			expect(mockResponse.send).toHaveBeenCalled();
+		});
+	});
+
+	describe("updateJobRole", () => {
+		beforeEach(() => {
+			mockRequest = {
+				params: { id: "550e8400-e29b-41d4-a716-446655440000" },
+				body: {
+					roleName: "Updated Software Engineer",
+					location: "London",
+				},
+			};
+		});
+
+		it("should return 200 status with updated job role", async () => {
+			mockUpdateJobRole.mockResolvedValue(mockUpdatedJobRole);
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(200);
+			expect(mockResponse.json).toHaveBeenCalledWith(mockUpdatedJobRole);
+		});
+
+		it("should call service updateJobRole with correct parameters", async () => {
+			mockUpdateJobRole.mockResolvedValue(mockUpdatedJobRole);
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockUpdateJobRole).toHaveBeenCalledWith(
+				"550e8400-e29b-41d4-a716-446655440000",
+				expect.objectContaining({
+					roleName: "Updated Software Engineer",
+					location: "London",
+				}),
+			);
+		});
+
+		it("should return 404 when job role not found", async () => {
+			mockUpdateJobRole.mockResolvedValue(null);
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(404);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Job role not found",
+			});
+		});
+
+		it("should return 400 when no fields provided", async () => {
+			mockRequest.body = {};
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "No fields to update",
+			});
+		});
+
+		it("should return 400 when role name is empty", async () => {
+			mockRequest.body = { roleName: "" };
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Role name cannot be empty",
+			});
+		});
+
+		it("should return 400 when description is empty", async () => {
+			mockRequest.body = { description: "   " };
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Job spec summary cannot be empty",
+			});
+		});
+
+		it("should return 400 when SharePoint URL is invalid", async () => {
+			mockRequest.body = { sharepointUrl: "not-a-valid-url" };
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Invalid SharePoint URL format",
+			});
+		});
+
+		it("should return 400 when SharePoint URL has invalid protocol", async () => {
+			mockRequest.body = { sharepointUrl: "ftp://invalid.com" };
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Invalid SharePoint URL format",
+			});
+		});
+
+		it("should return 400 when numberOfOpenPositions is less than 1", async () => {
+			mockRequest.body = { numberOfOpenPositions: 0 };
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Number of open positions must be at least 1",
+			});
+		});
+
+		it("should return 400 when closing date is in the past", async () => {
+			mockRequest.body = { closingDate: "2025-01-01" };
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Closing date must be in the future",
+			});
+		});
+
+		it("should return 400 when closing date is invalid", async () => {
+			mockRequest.body = { closingDate: "not-a-date" };
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Invalid closing date format",
+			});
+		});
+
+		it("should return 400 when service throws foreign key constraint error", async () => {
+			const error = new Error("Foreign key constraint failed");
+			mockUpdateJobRole.mockRejectedValue(error);
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Invalid capability, band, or status selected",
+			});
+		});
+
+		it("should return 500 when service throws unexpected error", async () => {
+			const error = new Error("Unexpected error");
+			mockUpdateJobRole.mockRejectedValue(error);
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(500);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Internal server error",
+			});
+		});
+
+		it("should return 400 when responsibilities is empty", async () => {
+			mockRequest.body = { responsibilities: "   " };
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Responsibilities cannot be empty",
+			});
+		});
+
+		it("should return 400 when location is empty", async () => {
+			mockRequest.body = { location: "" };
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Location cannot be empty",
+			});
+		});
+
+		it("should return 400 when sharepoint URL is empty", async () => {
+			mockRequest.body = { sharepointUrl: "" };
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "SharePoint link cannot be empty",
+			});
+		});
+
+		it("should return 400 when capabilityId is empty", async () => {
+			mockRequest.body = { capabilityId: "" };
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Capability cannot be empty",
+			});
+		});
+
+		it("should return 400 when bandId is empty", async () => {
+			mockRequest.body = { bandId: "" };
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Band cannot be empty",
+			});
+		});
+
+		it("should return 400 when statusId is empty", async () => {
+			mockRequest.body = { statusId: "" };
+
+			await controller.updateJobRole(
+				mockRequest as Request<JobRoleParams>,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				error: "Status cannot be empty",
+			});
 		});
 	});
 });
