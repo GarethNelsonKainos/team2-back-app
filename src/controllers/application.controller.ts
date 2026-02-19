@@ -38,7 +38,7 @@ export class ApplicationController {
 
 	async getApplicationsForUser(req: Request, res: Response): Promise<void> {
 		const userId = res.locals.user.userId;
-
+		
 		try {
 			const applications = await this.applicationService.getApplicationsForUser(
 				userId,

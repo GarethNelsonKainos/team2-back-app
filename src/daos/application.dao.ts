@@ -15,6 +15,9 @@ export class ApplicationDao {
 			where: {
 				userId: userId,
 			},
+			include: {
+				jobRole: true,
+			}
 		});
 	}
 }
