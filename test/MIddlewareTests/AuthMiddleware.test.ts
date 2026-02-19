@@ -21,6 +21,7 @@ describe("Auth Middleware - authenticateToken", () => {
 		mockResponse = {
 			status: vi.fn().mockReturnThis(),
 			json: vi.fn().mockReturnThis(),
+			locals: {},
 		};
 		mockNext = vi.fn();
 
@@ -146,6 +147,7 @@ describe("Auth Middleware - authenticateToken", () => {
 		};
 
 		mockRequest.headers = { authorization: "Bearer valid-token" };
+		mockResponse.locals = {};
 		vi.mocked(jwt.verify).mockReturnValue(mockDecodedToken as any);
 
 		authenticateToken(
@@ -155,7 +157,7 @@ describe("Auth Middleware - authenticateToken", () => {
 		);
 
 		expect(jwt.verify).toHaveBeenCalledWith("valid-token", "test-secret-key");
-		expect(mockRequest.user).toEqual(mockDecodedToken);
+		expect(mockResponse.locals.user).toEqual(mockDecodedToken);
 		expect(mockNext).toHaveBeenCalledOnce();
 		expect(mockResponse.status).not.toHaveBeenCalled();
 		expect(mockResponse.json).not.toHaveBeenCalled();
