@@ -27,6 +27,11 @@ router.put(
 	jobRoleController.updateJobRole.bind(jobRoleController),
 );
 
+router.delete(
+	"/job-roles/:id",
+	jobRoleController.deleteJobRole.bind(jobRoleController),
+);
+
 router.post(
 	"/job-roles",
 	jobRoleController.createJobRole.bind(jobRoleController),

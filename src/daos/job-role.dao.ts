@@ -130,4 +130,19 @@ export class JobRoleDao {
 			},
 		});
 	}
+
+	async deleteJobRole(id: string): Promise<JobRole | null> {
+		try {
+			const deletedJobRole = await prisma.jobRole.delete({
+				where: { jobRoleId: id },
+			});
+			return deletedJobRole;
+		} catch (error) {
+			// Prisma throws P2025 when record doesn't exist
+			if ((error as any).code === "P2025") {
+				return null;
+			}
+			throw error;
+		}
+	}
 }

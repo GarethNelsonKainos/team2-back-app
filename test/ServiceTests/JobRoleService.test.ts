@@ -15,6 +15,7 @@ describe("JobRoleService", () => {
 	let mockCreateJobRole: any;
 	let mockGetAllStatuses: any;
 	let mockUpdateJobRole: any;
+	let mockDeleteJobRole: any;
 
 	const mockDaoResponse = [
 		{
@@ -95,6 +96,7 @@ describe("JobRoleService", () => {
 		mockCreateJobRole = vi.fn();
 		mockGetAllStatuses = vi.fn();
 		mockUpdateJobRole = vi.fn();
+		mockDeleteJobRole = vi.fn();
 
 		// Mock the DAO class
 		JobRoleDao.prototype.getOpenJobRoles = mockGetOpenJobRoles;
@@ -104,6 +106,7 @@ describe("JobRoleService", () => {
 		JobRoleDao.prototype.createJobRole = mockCreateJobRole;
 		JobRoleDao.prototype.getAllStatuses = mockGetAllStatuses;
 		JobRoleDao.prototype.updateJobRole = mockUpdateJobRole;
+		JobRoleDao.prototype.deleteJobRole = mockDeleteJobRole;
 
 		service = new JobRoleService();
 	});
@@ -369,6 +372,60 @@ describe("JobRoleService", () => {
 
 			expect(result).toBeDefined();
 			expect(result?.numberOfOpenPositions).toBe(10);
+		});
+	});
+
+	describe("deleteJobRole", () => {
+		it("should call DAO deleteJobRole and return deleted job role", async () => {
+			// Arrange
+			const mockDeletedJobRole = {
+				jobRoleId: "550e8400-e29b-41d4-a716-446655440000",
+				roleName: "Software Engineer",
+				location: "Belfast",
+				closingDate: new Date("2026-03-15"),
+				description: null,
+				responsibilities: null,
+				sharepointUrl: null,
+				numberOfOpenPositions: null,
+				capabilityId: "660e8400-e29b-41d4-a716-446655440001",
+				bandId: "770e8400-e29b-41d4-a716-446655440002",
+				statusId: "880e8400-e29b-41d4-a716-446655440003",
+			};
+			mockDeleteJobRole.mockResolvedValue(mockDeletedJobRole);
+
+			// Act
+			const result = await service.deleteJobRole(
+				"550e8400-e29b-41d4-a716-446655440000",
+			);
+
+			// Assert
+			expect(mockDeleteJobRole).toHaveBeenCalledOnce();
+			expect(mockDeleteJobRole).toHaveBeenCalledWith(
+				"550e8400-e29b-41d4-a716-446655440000",
+			);
+			expect(result).toEqual(mockDeletedJobRole);
+		});
+
+		it("should return null when DAO returns null (job role not found)", async () => {
+			// Arrange
+			mockDeleteJobRole.mockResolvedValue(null);
+
+			// Act
+			const result = await service.deleteJobRole("non-existent-id");
+
+			// Assert
+			expect(result).toBeNull();
+		});
+
+		it("should propagate errors from DAO layer", async () => {
+			// Arrange
+			const daoError = new Error("Database error");
+			mockDeleteJobRole.mockRejectedValue(daoError);
+
+			// Act & Assert
+			await expect(
+				service.deleteJobRole("550e8400-e29b-41d4-a716-446655440000"),
+			).rejects.toThrow("Database error");
 		});
 	});
 });
