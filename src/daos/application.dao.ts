@@ -20,4 +20,12 @@ export class ApplicationDao {
 			},
 		});
 	}
+
+	async getApplicationsByJobRoleId(jobRoleId: string) {
+		return prisma.applications.findMany({
+			where: {
+				jobRoleId: jobRoleId,
+			},
+		});
+	}
 }

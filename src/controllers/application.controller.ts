@@ -48,4 +48,16 @@ export class ApplicationController {
 			res.status(500).send();
 		}
 	}
+
+	async getApplicationByJobRoleId(req: Request, res: Response): Promise<void> {
+		const jobRoleId  = req.params.jobRoleId as string;
+		try {
+			const applications =
+				await this.applicationService.getApplicationByJobRoleId(jobRoleId);
+			res.json(applications);
+		} catch (error) {
+			console.error("Error fetching applications for job role:", error);
+			res.status(500).send();
+		}
+	}
 }
