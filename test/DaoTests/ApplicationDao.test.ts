@@ -11,6 +11,7 @@ vi.mock("../../src/daos/prisma.js", () => ({
 	prisma: {
 		applications: {
 			create: vi.fn(),
+			findMany: vi.fn(),
 		},
 	},
 }));
@@ -62,6 +63,70 @@ describe("ApplicationDao", () => {
 			await expect(dao.createApplication(mockJobApplication)).rejects.toThrow(
 				"Database error",
 			);
+		});
+	});
+
+	describe("getApplicationsForUser", () => {
+		const mockApplications: Applications[] = [
+			{
+				applicationId: "app-1",
+				userId: "user-123",
+				jobRoleId: "role-1",
+				status: "IN_PROGRESS",
+				appliedAt: new Date("2026-02-16"),
+				cvUrl: "https://example.com/cv1.pdf",
+			},
+			{
+				applicationId: "app-2",
+				userId: "user-123",
+				jobRoleId: "role-2",
+				status: "ACCEPTED",
+				appliedAt: new Date("2026-02-15"),
+				cvUrl: "https://example.com/cv2.pdf",
+			},
+		];
+
+		it("should return applications for a user with jobRole included", async () => {
+			vi.mocked(prisma.applications.findMany).mockResolvedValue(
+				mockApplications,
+			);
+
+			const result = await dao.getApplicationsForUser("user-123");
+
+			expect(prisma.applications.findMany).toHaveBeenCalledWith({
+				where: {
+					userId: "user-123",
+				},
+				include: {
+					jobRole: true,
+				},
+			});
+			expect(result).toEqual(mockApplications);
+		});
+
+		it("should return empty array when user has no applications", async () => {
+			vi.mocked(prisma.applications.findMany).mockResolvedValue([]);
+
+			const result = await dao.getApplicationsForUser("user-456");
+
+			expect(prisma.applications.findMany).toHaveBeenCalledWith({
+				where: {
+					userId: "user-456",
+				},
+				include: {
+					jobRole: true,
+				},
+			});
+			expect(result).toEqual([]);
+		});
+
+		it("should throw an error when prisma findMany fails", async () => {
+			const error = new Error("Database error");
+			vi.mocked(prisma.applications.findMany).mockRejectedValue(error);
+
+			await expect(
+				dao.getApplicationsForUser("user-123"),
+			).rejects.toThrow("Database error");
 		});
 	});
 });

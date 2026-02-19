@@ -46,6 +46,7 @@ describe("ApplicationService", () => {
 
 		mockApplicationDao = {
 			createApplication: mockCreateApplication,
+			getApplicationsForUser: vi.fn(),
 		} as unknown as ApplicationDao;
 
 		applicationService = new ApplicationService(
@@ -267,6 +268,67 @@ describe("ApplicationService", () => {
 				"uploadFile",
 				"createApplication",
 			]);
+		});
+	});
+
+	describe("getApplicationsForUser", () => {
+		it("should return applications for user from DAO", async () => {
+			const mockApplications = [
+				{
+					applicationId: "app-1",
+					userId: "user-123",
+					jobRoleId: "role-1",
+					status: "IN_PROGRESS",
+					appliedAt: new Date("2026-02-16"),
+					cvUrl: "https://example.com/cv1.pdf",
+				},
+				{
+					applicationId: "app-2",
+					userId: "user-123",
+					jobRoleId: "role-2",
+					status: "ACCEPTED",
+					appliedAt: new Date("2026-02-15"),
+					cvUrl: "https://example.com/cv2.pdf",
+				},
+			];
+
+			(mockApplicationDao.getApplicationsForUser as Mock).mockResolvedValue(
+				mockApplications,
+			);
+
+			const result = await applicationService.getApplicationsForUser(
+				"user-123",
+			);
+
+			expect(mockApplicationDao.getApplicationsForUser).toHaveBeenCalledWith(
+				"user-123",
+			);
+			expect(result).toEqual(mockApplications);
+			expect(result).toHaveLength(2);
+		});
+
+		it("should return empty array when user has no applications", async () => {
+			(mockApplicationDao.getApplicationsForUser as Mock).mockResolvedValue([]);
+
+			const result = await applicationService.getApplicationsForUser(
+				"user-456",
+			);
+
+			expect(mockApplicationDao.getApplicationsForUser).toHaveBeenCalledWith(
+				"user-456",
+			);
+			expect(result).toEqual([]);
+		});
+
+		it("should throw error when DAO fails", async () => {
+			const daoError = new Error("Database error");
+			(mockApplicationDao.getApplicationsForUser as Mock).mockRejectedValue(
+				daoError,
+			);
+
+			await expect(
+				applicationService.getApplicationsForUser("user-123"),
+			).rejects.toThrow("Database error");
 		});
 	});
 });
