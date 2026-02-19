@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Request, Response } from "express";
 import { JobRoleController } from "../../src/controllers/job-role.controller.js";
 import { JobRoleService } from "../../src/services/job-role.service.js";
+import * as createJobRoleValidator from "../../src/controllers/validators/job-role-create.validator.js";
 
 // Mock the Service module
 vi.mock("../../src/services/job-role.service.js");
@@ -326,7 +327,7 @@ describe("JobRoleController", () => {
 			// Assert
 			expect(mockResponse.status).toHaveBeenCalledWith(400);
 			expect(mockResponse.json).toHaveBeenCalledWith({
-				errors: [
+				errors: expect.arrayContaining([
 					"Role name is required",
 					"Job spec summary is required",
 					"SharePoint link is required",
@@ -336,8 +337,41 @@ describe("JobRoleController", () => {
 					"Closing date is required",
 					"Capability is required",
 					"Band is required",
-				],
+				]),
 			});
+			const responsePayload = (
+				mockResponse.json as unknown as {
+					mock: { calls: Array<[{ errors: string[] }]> };
+				}
+			).mock.calls[0][0];
+			expect(responsePayload.errors).toHaveLength(9);
+		});
+
+		it("should stop at required field checks before deeper validation", async () => {
+			mockRequest = {
+				body: {
+					roleName: "",
+					description: "Test description",
+					sharepointUrl: "not-a-url",
+					responsibilities: "Test responsibilities",
+					numberOfOpenPositions: 5,
+					location: "Belfast",
+					closingDate: "2026-12-31",
+					capabilityId: "cap-1",
+					bandId: "band-1",
+				},
+			};
+
+			await controller.createJobRole(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				errors: ["Role name is required"],
+			});
+			expect(mockCreateJobRole).not.toHaveBeenCalled();
 		});
 
 		it("should return 400 when SharePoint URL format is invalid", async () => {
@@ -398,6 +432,32 @@ describe("JobRoleController", () => {
 			});
 		});
 
+		it("should return 400 when closing date format is invalid", async () => {
+			mockRequest = {
+				body: {
+					roleName: "Test Role",
+					description: "Test description",
+					sharepointUrl: "https://sharepoint.test",
+					responsibilities: "Test responsibilities",
+					numberOfOpenPositions: 5,
+					location: "Belfast",
+					closingDate: "not-a-date",
+					capabilityId: "cap-1",
+					bandId: "band-1",
+				},
+			};
+
+			await controller.createJobRole(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				errors: ["Invalid closing date format"],
+			});
+		});
+
 		it("should return 400 when numberOfOpenPositions is less than 1", async () => {
 			// Arrange
 			mockRequest = {
@@ -453,6 +513,59 @@ describe("JobRoleController", () => {
 
 			// Assert
 			expect(mockResponse.status).toHaveBeenCalledWith(500);
+		});
+
+		it("should return 400 for foreign key constraint errors", async () => {
+			const error = new Error("Foreign key constraint failed on the field");
+			mockCreateJobRole.mockRejectedValue(error);
+			mockRequest = {
+				body: {
+					roleName: "Test Role",
+					description: "Test description",
+					sharepointUrl: "https://sharepoint.test",
+					responsibilities: "Test responsibilities",
+					numberOfOpenPositions: 5,
+					location: "Belfast",
+					closingDate: "2026-12-31",
+					capabilityId: "cap-1",
+					bandId: "band-1",
+				},
+			};
+
+			await controller.createJobRole(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				errors: ["Invalid capability or band selected"],
+			});
+		});
+
+		it("should return 400 when validator gives no errors but no input", async () => {
+			const validatorSpy = vi
+				.spyOn(createJobRoleValidator, "validateAndBuildCreateJobRoleInput")
+				.mockReturnValue({
+					errors: [],
+				} as unknown as ReturnType<
+					typeof createJobRoleValidator.validateAndBuildCreateJobRoleInput
+				>);
+
+			mockRequest = { body: {} };
+
+			await controller.createJobRole(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(mockResponse.status).toHaveBeenCalledWith(400);
+			expect(mockResponse.json).toHaveBeenCalledWith({
+				errors: ["Invalid request body"],
+			});
+			expect(mockCreateJobRole).not.toHaveBeenCalled();
+
+			validatorSpy.mockRestore();
 		});
 	});
 });

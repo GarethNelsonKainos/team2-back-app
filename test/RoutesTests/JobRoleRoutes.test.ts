@@ -359,7 +359,7 @@ describe("JobRole Routes - Integration Tests", () => {
 			expect(createJobRoleSpy).toHaveBeenCalledTimes(1);
 		});
 
-		it("should return 400 when role name is missing", async () => {
+		it("should return 400 when data is missing", async () => {
 			const app = express();
 			app.use(express.json());
 			app.use(jobRoleRouter);
@@ -367,7 +367,7 @@ describe("JobRole Routes - Integration Tests", () => {
 			const response = await request(app).post("/job-roles").send({});
 
 			expect(response.status).toBe(400);
-			expect(response.body.errors).toEqual([
+			expect(response.body.errors).toEqual(expect.arrayContaining([
 				"Role name is required",
 				"Job spec summary is required",
 				"SharePoint link is required",
@@ -377,7 +377,8 @@ describe("JobRole Routes - Integration Tests", () => {
 				"Closing date is required",
 				"Capability is required",
 				"Band is required",
-			]);
+			]));
+			expect(response.body.errors).toHaveLength(9);
 		});
 
 		it("should return 400 when SharePoint URL is invalid", async () => {
