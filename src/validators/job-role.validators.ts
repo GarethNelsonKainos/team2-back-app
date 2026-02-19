@@ -28,7 +28,7 @@ export function validateSharePointUrl(
 	}
 
 	// If URL is provided, validate its format
-	if (url && url.trim()) {
+	if (url?.trim()) {
 		try {
 			const parsedUrl = new URL(url);
 			if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
