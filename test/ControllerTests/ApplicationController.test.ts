@@ -43,6 +43,7 @@ describe("ApplicationController", () => {
 	beforeEach(() => {
 		mockApplicationService = {
 			createApplication: vi.fn(),
+			getApplicationsForUser: vi.fn(),
 		} as unknown as ApplicationService;
 
 		applicationController = new ApplicationController(mockApplicationService);
@@ -61,6 +62,7 @@ describe("ApplicationController", () => {
 
 		mockResponse = {
 			status: statusMock,
+			json: jsonMock,
 			locals: {
 				user: {
 					userId: "test-user-id",
@@ -146,6 +148,86 @@ describe("ApplicationController", () => {
 			);
 			expect(consoleErrorSpy).toHaveBeenCalledWith(
 				"Error creating application:",
+				expect.any(Error),
+			);
+			expect(statusMock).toHaveBeenCalledWith(500);
+			expect(sendMock).toHaveBeenCalled();
+
+			consoleErrorSpy.mockRestore();
+		});
+	});
+
+	describe("getApplicationsForUser", () => {
+		it("should return applications with 200 status", async () => {
+			const mockApplications = [
+				{
+					applicationId: "app-1",
+					userId: "test-user-id",
+					jobRoleId: "role-1",
+					status: "IN_PROGRESS",
+					appliedAt: new Date(),
+					cvUrl: "https://example.com/cv.pdf",
+				},
+				{
+					applicationId: "app-2",
+					userId: "test-user-id",
+					jobRoleId: "role-2",
+					status: "ACCEPTED",
+					appliedAt: new Date(),
+					cvUrl: "https://example.com/cv2.pdf",
+				},
+			];
+
+			(mockApplicationService.getApplicationsForUser as Mock).mockResolvedValue(
+				mockApplications,
+			);
+
+			await applicationController.getApplicationsForUser(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(
+				mockApplicationService.getApplicationsForUser,
+			).toHaveBeenCalledWith("test-user-id");
+			expect(jsonMock).toHaveBeenCalledWith(mockApplications);
+		});
+
+		it("should return empty array with 200 status when user has no applications", async () => {
+			(mockApplicationService.getApplicationsForUser as Mock).mockResolvedValue(
+				[],
+			);
+
+			await applicationController.getApplicationsForUser(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(
+				mockApplicationService.getApplicationsForUser,
+			).toHaveBeenCalledWith("test-user-id");
+			expect(jsonMock).toHaveBeenCalledWith([]);
+		});
+
+		it("should return 500 when service throws an error", async () => {
+			const consoleErrorSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
+
+			(mockApplicationService.getApplicationsForUser as Mock).mockRejectedValue(
+				new Error("Service error"),
+			);
+
+			await applicationController.getApplicationsForUser(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(
+				mockApplicationService.getApplicationsForUser,
+			).toHaveBeenCalledWith("test-user-id");
+			expect(consoleErrorSpy).toHaveBeenCalledWith(
+				"Error fetching applications for user:",
 				expect.any(Error),
 			);
 			expect(statusMock).toHaveBeenCalledWith(500);

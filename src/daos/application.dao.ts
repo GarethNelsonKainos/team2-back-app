@@ -9,4 +9,15 @@ export class ApplicationDao {
 			},
 		});
 	}
+
+	async getApplicationsForUser(userId: string) {
+		return prisma.applications.findMany({
+			where: {
+				userId: userId,
+			},
+			include: {
+				jobRole: true,
+			},
+		});
+	}
 }

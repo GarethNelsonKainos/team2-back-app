@@ -1,5 +1,6 @@
 import type { ApplicationDao } from "../daos/application.dao.js";
 import type { S3Service } from "./s3.service.js";
+import type { Applications } from "../generated/prisma/client.js";
 import {
 	ApplicationStatus,
 	type CreateApplicationRequest,
@@ -29,5 +30,9 @@ export class ApplicationService {
 		};
 
 		await this.applicationDao.createApplication(application);
+	}
+
+	async getApplicationsForUser(userId: string): Promise<Applications[]> {
+		return this.applicationDao.getApplicationsForUser(userId);
 	}
 }

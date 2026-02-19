@@ -73,3 +73,5 @@ export const upload = multer({
 });
 
 const uploadSingle = upload.single("CV");
+
+export { fileFilter };

@@ -17,6 +17,7 @@ describe("ApplicationRoutes - integration tests", () => {
 	let createApplicationSpy: ReturnType<typeof vi.spyOn>;
 	let uploadFileSpy: ReturnType<typeof vi.spyOn>;
 	let generateFileKeySpy: ReturnType<typeof vi.spyOn>;
+	let getApplicationsForUserSpy: ReturnType<typeof vi.spyOn>;
 
 	const mockUser = {
 		userId: "550e8400-e29b-41d4-a716-446655440000",
@@ -53,6 +54,27 @@ describe("ApplicationRoutes - integration tests", () => {
 		generateFileKeySpy = vi
 			.spyOn(S3Service.prototype, "generateFileKey")
 			.mockReturnValue("uploads/cv-123.pdf");
+
+		getApplicationsForUserSpy = vi
+			.spyOn(ApplicationDao.prototype, "getApplicationsForUser")
+			.mockResolvedValue([
+				{
+					applicationId: "app-1",
+					userId: mockUser.userId,
+					jobRoleId: "job-role-1",
+					cvUrl: "https://s3.amazonaws.com/bucket/cv-1.pdf",
+					status: "IN_PROGRESS",
+					appliedAt: new Date(),
+				},
+				{
+					applicationId: "app-2",
+					userId: mockUser.userId,
+					jobRoleId: "job-role-2",
+					cvUrl: "https://s3.amazonaws.com/bucket/cv-2.pdf",
+					status: "ACCEPTED",
+					appliedAt: new Date(),
+				},
+			] as any);
 
 		// Create Express app with routes
 		const s3Service = new S3Service();
@@ -256,6 +278,89 @@ describe("ApplicationRoutes - integration tests", () => {
 			);
 
 			consoleErrorSpy.mockRestore();
+		});
+	});
+
+	describe("GET /api/myApplications", () => {
+		it("should return 401 when no token is provided", async () => {
+			const response = await request(app).get("/api/myApplications");
+
+			expect(response.status).toBe(401);
+			expect(response.body).toEqual({ error: "Access token required" });
+			expect(getApplicationsForUserSpy).not.toHaveBeenCalled();
+		});
+
+		it("should return 403 when token is invalid", async () => {
+			const response = await request(app)
+				.get("/api/myApplications")
+				.set("Authorization", "Bearer invalid-token");
+
+			expect(response.status).toBe(403);
+			expect(response.body).toEqual({ error: "Invalid or expired token" });
+			expect(getApplicationsForUserSpy).not.toHaveBeenCalled();
+		});
+
+		it("should return applications with 200 status for valid token", async () => {
+			const response = await request(app)
+				.get("/api/myApplications")
+				.set("Authorization", `Bearer ${validToken}`);
+
+			expect(response.status).toBe(200);
+			expect(response.body).toHaveLength(2);
+			expect(response.body[0]).toEqual(
+				expect.objectContaining({
+					applicationId: "app-1",
+					userId: mockUser.userId,
+					jobRoleId: "job-role-1",
+				}),
+			);
+			expect(getApplicationsForUserSpy).toHaveBeenCalledWith(mockUser.userId);
+		});
+
+		it("should return empty array when user has no applications", async () => {
+			getApplicationsForUserSpy.mockResolvedValue([]);
+
+			const response = await request(app)
+				.get("/api/myApplications")
+				.set("Authorization", `Bearer ${validToken}`);
+
+			expect(response.status).toBe(200);
+			expect(response.body).toEqual([]);
+			expect(getApplicationsForUserSpy).toHaveBeenCalledWith(mockUser.userId);
+		});
+
+		it("should return 500 when service throws an error", async () => {
+			const consoleErrorSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
+
+			getApplicationsForUserSpy.mockRejectedValueOnce(
+				new Error("Database error"),
+			);
+
+			const response = await request(app)
+				.get("/api/myApplications")
+				.set("Authorization", `Bearer ${validToken}`);
+
+			expect(response.status).toBe(500);
+			expect(consoleErrorSpy).toHaveBeenCalledWith(
+				"Error fetching applications for user:",
+				expect.any(Error),
+			);
+
+			consoleErrorSpy.mockRestore();
+		});
+
+		it("should only return applications for authenticated user", async () => {
+			const response = await request(app)
+				.get("/api/myApplications")
+				.set("Authorization", `Bearer ${validToken}`);
+
+			expect(response.status).toBe(200);
+			expect(getApplicationsForUserSpy).toHaveBeenCalledWith(mockUser.userId);
+			response.body.forEach((app: any) => {
+				expect(app.userId).toBe(mockUser.userId);
+			});
 		});
 	});
 });

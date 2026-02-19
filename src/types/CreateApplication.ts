@@ -1,5 +1,7 @@
 export enum ApplicationStatus {
 	IN_PROGRESS = "IN_PROGRESS",
+	HIRED = "HIRED",
+	REJECTED = "REJECTED",
 }
 
 export interface CreateApplicationRequest {
