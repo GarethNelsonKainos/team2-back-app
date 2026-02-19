@@ -187,9 +187,9 @@ describe("ApplicationController", () => {
 				mockResponse as Response,
 			);
 
-			expect(mockApplicationService.getApplicationsForUser).toHaveBeenCalledWith(
-				"test-user-id",
-			);
+			expect(
+				mockApplicationService.getApplicationsForUser,
+			).toHaveBeenCalledWith("test-user-id");
 			expect(jsonMock).toHaveBeenCalledWith(mockApplications);
 		});
 
@@ -203,9 +203,9 @@ describe("ApplicationController", () => {
 				mockResponse as Response,
 			);
 
-			expect(mockApplicationService.getApplicationsForUser).toHaveBeenCalledWith(
-				"test-user-id",
-			);
+			expect(
+				mockApplicationService.getApplicationsForUser,
+			).toHaveBeenCalledWith("test-user-id");
 			expect(jsonMock).toHaveBeenCalledWith([]);
 		});
 
@@ -223,9 +223,9 @@ describe("ApplicationController", () => {
 				mockResponse as Response,
 			);
 
-			expect(mockApplicationService.getApplicationsForUser).toHaveBeenCalledWith(
-				"test-user-id",
-			);
+			expect(
+				mockApplicationService.getApplicationsForUser,
+			).toHaveBeenCalledWith("test-user-id");
 			expect(consoleErrorSpy).toHaveBeenCalledWith(
 				"Error fetching applications for user:",
 				expect.any(Error),

@@ -36,18 +36,16 @@ export class ApplicationController {
 		}
 	}
 
-	async getApplicationsForUser(req: Request, res: Response): Promise<void> {
+	async getApplicationsForUser(_req: Request, res: Response): Promise<void> {
 		const userId = res.locals.user.userId;
-		
+
 		try {
-			const applications = await this.applicationService.getApplicationsForUser(
-				userId,
-			);
+			const applications =
+				await this.applicationService.getApplicationsForUser(userId);
 			res.json(applications);
 		} catch (error) {
 			console.error("Error fetching applications for user:", error);
 			res.status(500).send();
 		}
 	}
-
 }

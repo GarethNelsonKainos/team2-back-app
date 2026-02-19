@@ -296,9 +296,8 @@ describe("ApplicationService", () => {
 				mockApplications,
 			);
 
-			const result = await applicationService.getApplicationsForUser(
-				"user-123",
-			);
+			const result =
+				await applicationService.getApplicationsForUser("user-123");
 
 			expect(mockApplicationDao.getApplicationsForUser).toHaveBeenCalledWith(
 				"user-123",
@@ -310,9 +309,8 @@ describe("ApplicationService", () => {
 		it("should return empty array when user has no applications", async () => {
 			(mockApplicationDao.getApplicationsForUser as Mock).mockResolvedValue([]);
 
-			const result = await applicationService.getApplicationsForUser(
-				"user-456",
-			);
+			const result =
+				await applicationService.getApplicationsForUser("user-456");
 
 			expect(mockApplicationDao.getApplicationsForUser).toHaveBeenCalledWith(
 				"user-456",

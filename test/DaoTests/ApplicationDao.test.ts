@@ -124,9 +124,9 @@ describe("ApplicationDao", () => {
 			const error = new Error("Database error");
 			vi.mocked(prisma.applications.findMany).mockRejectedValue(error);
 
-			await expect(
-				dao.getApplicationsForUser("user-123"),
-			).rejects.toThrow("Database error");
+			await expect(dao.getApplicationsForUser("user-123")).rejects.toThrow(
+				"Database error",
+			);
 		});
 	});
 });

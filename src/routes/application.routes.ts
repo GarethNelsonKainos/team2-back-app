@@ -16,9 +16,10 @@ export default function applicationRouter(
 	);
 
 	router.get(
-		"/myApplications", 
+		"/myApplications",
 		authenticateToken,
-		applicationController.getApplicationsForUser.bind(applicationController));
+		applicationController.getApplicationsForUser.bind(applicationController),
+	);
 
 	return router;
 }

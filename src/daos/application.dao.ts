@@ -17,7 +17,7 @@ export class ApplicationDao {
 			},
 			include: {
 				jobRole: true,
-			}
+			},
 		});
 	}
 }
