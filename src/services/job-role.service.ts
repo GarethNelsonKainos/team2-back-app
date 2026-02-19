@@ -49,6 +49,6 @@ export class JobRoleService {
 	}
 
 	async deleteJobRole(id: string): Promise<JobRole | null> {
-		return await this.jobRoleDao.deleteJobRole(id);
+		return this.jobRoleDao.deleteJobRole(id);
 	}
 }
