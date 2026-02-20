@@ -162,6 +162,20 @@ describe("ApplicationDao", () => {
 				where: {
 					jobRoleId: "role-123",
 				},
+				include: {
+					user: {
+						select: {
+							firstName: true,
+							secondName: true,
+						},
+					},
+					jobRole: {
+						select: {
+							roleName: true,
+							location: true,
+						},
+					},
+				},
 			});
 			expect(result).toEqual(mockApplications);
 		});
@@ -174,6 +188,20 @@ describe("ApplicationDao", () => {
 			expect(prisma.applications.findMany).toHaveBeenCalledWith({
 				where: {
 					jobRoleId: "role-999",
+				},
+				include: {
+					user: {
+						select: {
+							firstName: true,
+							secondName: true,
+						},
+					},
+					jobRole: {
+						select: {
+							roleName: true,
+							location: true,
+						},
+					},
 				},
 			});
 			expect(result).toEqual([]);

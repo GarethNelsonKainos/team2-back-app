@@ -26,6 +26,20 @@ export class ApplicationDao {
 			where: {
 				jobRoleId: jobRoleId,
 			},
+			include: {
+				user: {
+					select: {
+						firstName: true,
+						secondName: true,
+					},
+				},
+				jobRole: {
+					select: {
+						roleName: true,
+						location: true,
+					},
+				},
+			},
 		});
 	}
 
