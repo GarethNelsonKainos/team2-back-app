@@ -38,7 +38,7 @@ export default function authorisedRoles(allowedRoles: UserRole[]) {
 
 			const tokenRole = decoded.role;
 			if (!allowedRoles.includes(tokenRole)) {
-				res.sendStatus(403);
+				res.status(403).json({ error: "Access denied" });
 				return;
 			}
 

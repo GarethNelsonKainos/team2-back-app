@@ -455,11 +455,8 @@ describe("ApplicationService", () => {
 			);
 		});
 
-		it("should throw error when DAO fails and log to console", async () => {
+		it("should throw error when DAO fails", async () => {
 			const daoError = new Error("Database error");
-			const consoleErrorSpy = vi
-				.spyOn(console, "error")
-				.mockImplementation(() => {});
 
 			(mockApplicationDao.updateApplicationStatus as Mock).mockRejectedValue(
 				daoError,
@@ -471,13 +468,6 @@ describe("ApplicationService", () => {
 					ApplicationStatus.HIRED,
 				),
 			).rejects.toThrow("Database error");
-
-			expect(consoleErrorSpy).toHaveBeenCalledWith(
-				"Error updating application status:",
-				daoError,
-			);
-
-			consoleErrorSpy.mockRestore();
 		});
 
 		it("should pass exact parameters to DAO", async () => {

@@ -1,8 +1,8 @@
 import type { Request, Response } from "express";
 import type { ApplicationService } from "../services/application.service";
-import type {
+import {
 	ApplicationStatus,
-	CreateApplicationRequest,
+	type CreateApplicationRequest,
 } from "../types/CreateApplication";
 
 export class ApplicationController {
@@ -53,7 +53,13 @@ export class ApplicationController {
 	}
 
 	async getApplicationByJobRoleId(req: Request, res: Response): Promise<void> {
-		const jobRoleId = req.params.jobRoleId as string;
+		const jobRoleId = req.params.jobRoleId;
+
+		if (typeof jobRoleId !== "string" || jobRoleId.trim() === "") {
+			res.status(400).json({ error: "Invalid jobRoleId" });
+			return;
+		}
+
 		try {
 			const applications =
 				await this.applicationService.getApplicationByJobRoleId(jobRoleId);
@@ -66,11 +72,16 @@ export class ApplicationController {
 
 	async updateApplicationStatus(req: Request, res: Response): Promise<void> {
 		console.log("Received request to update application status:");
-		const applicationId = req.params.applicationId as string;
+		const applicationId = req.params.applicationId;
 		const newStatus = req.params.status as ApplicationStatus;
 
-		if (!newStatus) {
-			res.status(400).json({ error: "newStatus is required" });
+		if (typeof applicationId !== "string" || applicationId.trim() === "") {
+			res.status(400).json({ error: "Invalid applicationId" });
+			return;
+		}
+
+		if (!newStatus || !Object.values(ApplicationStatus).includes(newStatus)) {
+			res.status(400).json({ error: "Invalid Status" });
 			return;
 		}
 

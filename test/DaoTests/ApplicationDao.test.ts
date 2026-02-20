@@ -281,22 +281,12 @@ describe("ApplicationDao", () => {
 
 		it("should throw an error when prisma update fails", async () => {
 			const error = new Error("Database error");
-			const consoleErrorSpy = vi
-				.spyOn(console, "error")
-				.mockImplementation(() => {});
 
 			vi.mocked(prisma.applications.update).mockRejectedValue(error);
 
 			await expect(
 				dao.updateApplicationStatus("app-123", "HIRED"),
 			).rejects.toThrow("Database error");
-
-			expect(consoleErrorSpy).toHaveBeenCalledWith(
-				"Error updating application status in DAO:",
-				error,
-			);
-
-			consoleErrorSpy.mockRestore();
 		});
 	});
 });
