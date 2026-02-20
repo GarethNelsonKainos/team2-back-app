@@ -1,5 +1,5 @@
-import type { JobApplication } from "../types/CreateApplication";
-import { prisma } from "./prisma";
+import type { JobApplication } from "../types/CreateApplication.js";
+import { prisma } from "./prisma.js";
 
 export class ApplicationDao {
 	async createApplication(applicationData: JobApplication) {

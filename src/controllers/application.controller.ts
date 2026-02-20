@@ -1,9 +1,9 @@
 import type { Request, Response } from "express";
-import type { ApplicationService } from "../services/application.service";
+import type { ApplicationService } from "../services/application.service.js";
 import {
 	ApplicationStatus,
 	type CreateApplicationRequest,
-} from "../types/CreateApplication";
+} from "../types/CreateApplication.js";
 
 export class ApplicationController {
 	private applicationService: ApplicationService;
