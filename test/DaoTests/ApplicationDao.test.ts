@@ -12,6 +12,7 @@ vi.mock("../../src/daos/prisma.js", () => ({
 		applications: {
 			create: vi.fn(),
 			findMany: vi.fn(),
+			update: vi.fn(),
 		},
 	},
 }));
@@ -127,6 +128,147 @@ describe("ApplicationDao", () => {
 			await expect(dao.getApplicationsForUser("user-123")).rejects.toThrow(
 				"Database error",
 			);
+		});
+	});
+
+	describe("getApplicationsByJobRoleId", () => {
+		const mockApplications: Applications[] = [
+			{
+				applicationId: "app-1",
+				userId: "user-1",
+				jobRoleId: "role-123",
+				status: "IN_PROGRESS",
+				appliedAt: new Date("2026-02-16"),
+				cvUrl: "https://example.com/cv1.pdf",
+			},
+			{
+				applicationId: "app-2",
+				userId: "user-2",
+				jobRoleId: "role-123",
+				status: "HIRED",
+				appliedAt: new Date("2026-02-15"),
+				cvUrl: "https://example.com/cv2.pdf",
+			},
+		];
+
+		it("should return all applications for a specific job role", async () => {
+			vi.mocked(prisma.applications.findMany).mockResolvedValue(
+				mockApplications,
+			);
+
+			const result = await dao.getApplicationsByJobRoleId("role-123");
+
+			expect(prisma.applications.findMany).toHaveBeenCalledWith({
+				where: {
+					jobRoleId: "role-123",
+				},
+			});
+			expect(result).toEqual(mockApplications);
+		});
+
+		it("should return empty array when no applications exist for the job role", async () => {
+			vi.mocked(prisma.applications.findMany).mockResolvedValue([]);
+
+			const result = await dao.getApplicationsByJobRoleId("role-999");
+
+			expect(prisma.applications.findMany).toHaveBeenCalledWith({
+				where: {
+					jobRoleId: "role-999",
+				},
+			});
+			expect(result).toEqual([]);
+		});
+
+		it("should throw an error when prisma findMany fails", async () => {
+			const error = new Error("Database error");
+			vi.mocked(prisma.applications.findMany).mockRejectedValue(error);
+
+			await expect(dao.getApplicationsByJobRoleId("role-123")).rejects.toThrow(
+				"Database error",
+			);
+		});
+	});
+
+	describe("updateApplicationStatus", () => {
+		const mockUpdatedApplication: Applications = {
+			applicationId: "app-123",
+			userId: "user-123",
+			jobRoleId: "role-123",
+			status: "HIRED",
+			appliedAt: new Date("2026-02-16"),
+			cvUrl: "https://example.com/cv.pdf",
+		};
+
+		it("should update application status successfully", async () => {
+			vi.mocked(prisma.applications.update).mockResolvedValue(
+				mockUpdatedApplication,
+			);
+
+			await dao.updateApplicationStatus("app-123", "HIRED");
+
+			expect(prisma.applications.update).toHaveBeenCalledWith({
+				where: {
+					applicationId: "app-123",
+				},
+				data: {
+					status: "HIRED",
+				},
+			});
+		});
+
+		it("should update application status to REJECTED", async () => {
+			const rejectedApp = { ...mockUpdatedApplication, status: "REJECTED" };
+			vi.mocked(prisma.applications.update).mockResolvedValue(rejectedApp);
+
+			await dao.updateApplicationStatus("app-456", "REJECTED");
+
+			expect(prisma.applications.update).toHaveBeenCalledWith({
+				where: {
+					applicationId: "app-456",
+				},
+				data: {
+					status: "REJECTED",
+				},
+			});
+		});
+
+		it("should update application status to IN_PROGRESS", async () => {
+			const inProgressApp = {
+				...mockUpdatedApplication,
+				status: "IN_PROGRESS",
+			};
+			vi.mocked(prisma.applications.update).mockResolvedValue(inProgressApp);
+
+			await dao.updateApplicationStatus("app-789", "IN_PROGRESS");
+
+			expect(prisma.applications.update).toHaveBeenCalledWith({
+				where: {
+					applicationId: "app-789",
+				},
+				data: {
+					status: "IN_PROGRESS",
+				},
+			});
+		});
+
+		it("should throw an error when prisma update fails", async () => {
+			const error = new Error("Database error");
+			const consoleErrorSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
+
+			vi.mocked(prisma.applications.update).mockRejectedValue(error);
+
+			await expect(
+				dao.updateApplicationStatus("app-123", "HIRED"),
+			).rejects.toThrow("Database error");
+
+			expect(consoleErrorSpy).toHaveBeenCalledWith(
+				"Error updating application status in DAO:",
+				error,
+			);
+
+			consoleErrorSpy.mockRestore();
 		});
 	});
 });

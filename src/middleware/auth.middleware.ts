@@ -1,6 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import UserRole from "../types/UserRole";
+import type UserRole from "../types/UserRole";
 
 export interface AuthRequest extends Request {
 	user?: {
@@ -37,7 +37,7 @@ export default function authorisedRoles(allowedRoles: UserRole[]) {
 			};
 
 			const tokenRole = decoded.role;
-			if(!allowedRoles.includes(tokenRole)) {
+			if (!allowedRoles.includes(tokenRole)) {
 				res.sendStatus(403);
 				return;
 			}
@@ -48,6 +48,5 @@ export default function authorisedRoles(allowedRoles: UserRole[]) {
 			console.error("Token verification failed:", error);
 			res.status(500).json({ error: "Invalid or expired token" });
 		}
-
 	};
 }
