@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { ApplicationController } from "../controllers/application.controller.js";
 import { handleUpload } from "../middleware/file-upload.middleware.js";
-import authorisedRoles, { authenticateToken } from "../middleware/auth.middleware.js";
+import authorisedRoles from "../middleware/auth.middleware.js";
 import UserRole from "../types/UserRole.js";
 
 export default function applicationRouter(
@@ -26,6 +26,12 @@ export default function applicationRouter(
 		"/admin/job-roles/:jobRoleId",
 		authorisedRoles([UserRole.ADMIN]),
 		applicationController.getApplicationByJobRoleId.bind(applicationController),
+	);
+
+	router.put(
+		"/admin/application/:applicationId/:status",
+		authorisedRoles([UserRole.ADMIN]),
+		applicationController.updateApplicationStatus.bind(applicationController),
 	);
 
 	return router;

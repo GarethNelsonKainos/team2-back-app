@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import type { ApplicationService } from "../services/application.service";
-import type { CreateApplicationRequest } from "../types/CreateApplication";
+import type { ApplicationStatus, CreateApplicationRequest } from "../types/CreateApplication";
 
 export class ApplicationController {
 	private applicationService: ApplicationService;
@@ -57,6 +57,26 @@ export class ApplicationController {
 			res.json(applications);
 		} catch (error) {
 			console.error("Error fetching applications for job role:", error);
+			res.status(500).send();
+		}
+	}
+
+	async updateApplicationStatus(req: Request, res: Response): Promise<void> {
+		console.log("Received request to update application status:");
+		const applicationId = req.params.applicationId as string;
+		const newStatus = req.params.status as ApplicationStatus;
+
+
+		if (!newStatus) {
+			res.status(400).json({ error: "newStatus is required" });
+			return;
+		}
+
+		try {
+			await this.applicationService.updateApplicationStatus(applicationId, newStatus);
+			res.sendStatus(200);
+		} catch (error) {
+			console.error("Error updating application status:", error);
 			res.status(500).send();
 		}
 	}
