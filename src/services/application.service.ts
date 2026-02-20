@@ -35,4 +35,15 @@ export class ApplicationService {
 	async getApplicationsForUser(userId: string): Promise<Applications[]> {
 		return this.applicationDao.getApplicationsForUser(userId);
 	}
+
+	async getApplicationByJobRoleId(jobRoleId: string): Promise<Applications[]> {
+		return this.applicationDao.getApplicationsByJobRoleId(jobRoleId);
+	}
+
+	async updateApplicationStatus(
+		applicationId: string,
+		newStatus: ApplicationStatus,
+	): Promise<void> {
+		await this.applicationDao.updateApplicationStatus(applicationId, newStatus);
+	}
 }

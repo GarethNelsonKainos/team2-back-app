@@ -20,4 +20,37 @@ export class ApplicationDao {
 			},
 		});
 	}
+
+	async getApplicationsByJobRoleId(jobRoleId: string) {
+		return prisma.applications.findMany({
+			where: {
+				jobRoleId: jobRoleId,
+			},
+			include: {
+				user: {
+					select: {
+						firstName: true,
+						secondName: true,
+					},
+				},
+				jobRole: {
+					select: {
+						roleName: true,
+						location: true,
+					},
+				},
+			},
+		});
+	}
+
+	async updateApplicationStatus(applicationId: string, newStatus: string) {
+		await prisma.applications.update({
+			where: {
+				applicationId: applicationId,
+			},
+			data: {
+				status: newStatus,
+			},
+		});
+	}
 }

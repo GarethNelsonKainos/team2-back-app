@@ -39,17 +39,21 @@ describe("ApplicationController", () => {
 	let statusMock: Mock;
 	let jsonMock: Mock;
 	let sendMock: Mock;
+	let sendStatusMock: Mock;
 
 	beforeEach(() => {
 		mockApplicationService = {
 			createApplication: vi.fn(),
 			getApplicationsForUser: vi.fn(),
+			getApplicationByJobRoleId: vi.fn(),
+			updateApplicationStatus: vi.fn(),
 		} as unknown as ApplicationService;
 
 		applicationController = new ApplicationController(mockApplicationService);
 
 		jsonMock = vi.fn();
 		sendMock = vi.fn();
+		sendStatusMock = vi.fn();
 		statusMock = vi.fn().mockReturnValue({
 			json: jsonMock,
 			send: sendMock,
@@ -63,6 +67,7 @@ describe("ApplicationController", () => {
 		mockResponse = {
 			status: statusMock,
 			json: jsonMock,
+			sendStatus: sendStatusMock,
 			locals: {
 				user: {
 					userId: "test-user-id",
@@ -234,6 +239,211 @@ describe("ApplicationController", () => {
 			expect(sendMock).toHaveBeenCalled();
 
 			consoleErrorSpy.mockRestore();
+		});
+	});
+
+	describe("getApplicationByJobRoleId", () => {
+		it("should return applications for a specific job role with 200 status", async () => {
+			const mockApplications = [
+				{
+					applicationId: "app-1",
+					userId: "user-1",
+					jobRoleId: "role-1",
+					status: "IN_PROGRESS",
+					appliedAt: new Date(),
+					cvUrl: "https://example.com/cv1.pdf",
+				},
+				{
+					applicationId: "app-2",
+					userId: "user-2",
+					jobRoleId: "role-1",
+					status: "HIRED",
+					appliedAt: new Date(),
+					cvUrl: "https://example.com/cv2.pdf",
+				},
+			];
+
+			mockRequest.params = { jobRoleId: "role-1" };
+
+			(
+				mockApplicationService.getApplicationByJobRoleId as Mock
+			).mockResolvedValue(mockApplications);
+
+			await applicationController.getApplicationByJobRoleId(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(
+				mockApplicationService.getApplicationByJobRoleId,
+			).toHaveBeenCalledWith("role-1");
+			expect(jsonMock).toHaveBeenCalledWith(mockApplications);
+		});
+
+		it("should return empty array when no applications exist for the job role", async () => {
+			mockRequest.params = { jobRoleId: "non-existent-role" };
+
+			(
+				mockApplicationService.getApplicationByJobRoleId as Mock
+			).mockResolvedValue([]);
+
+			await applicationController.getApplicationByJobRoleId(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(
+				mockApplicationService.getApplicationByJobRoleId,
+			).toHaveBeenCalledWith("non-existent-role");
+			expect(jsonMock).toHaveBeenCalledWith([]);
+		});
+
+		it("should return 500 when service throws an error", async () => {
+			const consoleErrorSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
+
+			mockRequest.params = { jobRoleId: "role-1" };
+
+			(
+				mockApplicationService.getApplicationByJobRoleId as Mock
+			).mockRejectedValue(new Error("Service error"));
+
+			await applicationController.getApplicationByJobRoleId(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(
+				mockApplicationService.getApplicationByJobRoleId,
+			).toHaveBeenCalledWith("role-1");
+			expect(consoleErrorSpy).toHaveBeenCalledWith(
+				"Error fetching applications for job role:",
+				expect.any(Error),
+			);
+			expect(statusMock).toHaveBeenCalledWith(500);
+			expect(sendMock).toHaveBeenCalled();
+
+			consoleErrorSpy.mockRestore();
+		});
+	});
+
+	describe("updateApplicationStatus", () => {
+		it("should update application status and return 200", async () => {
+			mockRequest.params = {
+				applicationId: "app-1",
+				status: "HIRED",
+			};
+
+			const consoleLogSpy = vi
+				.spyOn(console, "log")
+				.mockImplementation(() => {});
+
+			(
+				mockApplicationService.updateApplicationStatus as Mock
+			).mockResolvedValue(undefined);
+
+			await applicationController.updateApplicationStatus(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(
+				mockApplicationService.updateApplicationStatus,
+			).toHaveBeenCalledWith("app-1", "HIRED");
+			expect(mockResponse.sendStatus).toHaveBeenCalledWith(200);
+
+			consoleLogSpy.mockRestore();
+		});
+
+		it("should update application status to REJECTED", async () => {
+			mockRequest.params = {
+				applicationId: "app-2",
+				status: "REJECTED",
+			};
+
+			const consoleLogSpy = vi
+				.spyOn(console, "log")
+				.mockImplementation(() => {});
+
+			(
+				mockApplicationService.updateApplicationStatus as Mock
+			).mockResolvedValue(undefined);
+
+			await applicationController.updateApplicationStatus(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(
+				mockApplicationService.updateApplicationStatus,
+			).toHaveBeenCalledWith("app-2", "REJECTED");
+			expect(mockResponse.sendStatus).toHaveBeenCalledWith(200);
+
+			consoleLogSpy.mockRestore();
+		});
+
+		it("should update application status to IN_PROGRESS", async () => {
+			mockRequest.params = {
+				applicationId: "app-3",
+				status: "IN_PROGRESS",
+			};
+
+			const consoleLogSpy = vi
+				.spyOn(console, "log")
+				.mockImplementation(() => {});
+
+			(
+				mockApplicationService.updateApplicationStatus as Mock
+			).mockResolvedValue(undefined);
+
+			await applicationController.updateApplicationStatus(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(
+				mockApplicationService.updateApplicationStatus,
+			).toHaveBeenCalledWith("app-3", "IN_PROGRESS");
+			expect(mockResponse.sendStatus).toHaveBeenCalledWith(200);
+
+			consoleLogSpy.mockRestore();
+		});
+
+		it("should return 500 when service throws an error", async () => {
+			const consoleErrorSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
+			const consoleLogSpy = vi
+				.spyOn(console, "log")
+				.mockImplementation(() => {});
+
+			mockRequest.params = {
+				applicationId: "app-1",
+				status: "HIRED",
+			};
+
+			(
+				mockApplicationService.updateApplicationStatus as Mock
+			).mockRejectedValue(new Error("Service error"));
+
+			await applicationController.updateApplicationStatus(
+				mockRequest as Request,
+				mockResponse as Response,
+			);
+
+			expect(
+				mockApplicationService.updateApplicationStatus,
+			).toHaveBeenCalledWith("app-1", "HIRED");
+			expect(consoleErrorSpy).toHaveBeenCalledWith(
+				"Error updating application status:",
+				expect.any(Error),
+			);
+			expect(statusMock).toHaveBeenCalledWith(500);
+			expect(sendMock).toHaveBeenCalled();
+
+			consoleErrorSpy.mockRestore();
+			consoleLogSpy.mockRestore();
 		});
 	});
 });

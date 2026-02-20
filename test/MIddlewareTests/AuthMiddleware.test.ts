@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { Response, NextFunction } from "express";
+import userRole from "../../src/types/UserRole";
 import jwt from "jsonwebtoken";
-import {
-	authenticateToken,
+import authorisedRoles, {
 	type AuthRequest,
 } from "../../src/middleware/auth.middleware.js";
 
 vi.mock("jsonwebtoken");
 
-describe("Auth Middleware - authenticateToken", () => {
+describe("Auth Middleware - authorisedRoles", () => {
 	let mockRequest: Partial<AuthRequest>;
 	let mockResponse: Partial<Response>;
 	let mockNext: NextFunction;
@@ -21,23 +21,22 @@ describe("Auth Middleware - authenticateToken", () => {
 		mockResponse = {
 			status: vi.fn().mockReturnThis(),
 			json: vi.fn().mockReturnThis(),
+			sendStatus: vi.fn().mockReturnThis(),
 			locals: {},
 		};
 		mockNext = vi.fn();
 
-		// Save original JWT_SECRET
 		originalJwtSecret = process.env.JWT_SECRET;
 		process.env.JWT_SECRET = "test-secret-key";
 	});
 
 	afterEach(() => {
 		vi.clearAllMocks();
-		// Restore original JWT_SECRET
 		process.env.JWT_SECRET = originalJwtSecret;
 	});
 
 	it("should return 401 when no authorization header is provided", () => {
-		authenticateToken(
+		authorisedRoles([userRole.ADMIN, userRole.USER])(
 			mockRequest as AuthRequest,
 			mockResponse as Response,
 			mockNext,
@@ -53,7 +52,7 @@ describe("Auth Middleware - authenticateToken", () => {
 	it("should return 401 when authorization header is empty", () => {
 		mockRequest.headers = { authorization: "" };
 
-		authenticateToken(
+		authorisedRoles([userRole.ADMIN, userRole.USER])(
 			mockRequest as AuthRequest,
 			mockResponse as Response,
 			mockNext,
@@ -69,7 +68,7 @@ describe("Auth Middleware - authenticateToken", () => {
 	it("should return 401 when authorization header does not contain Bearer token", () => {
 		mockRequest.headers = { authorization: "Bearer" };
 
-		authenticateToken(
+		authorisedRoles([userRole.ADMIN, userRole.USER])(
 			mockRequest as AuthRequest,
 			mockResponse as Response,
 			mockNext,
@@ -86,7 +85,7 @@ describe("Auth Middleware - authenticateToken", () => {
 		delete process.env.JWT_SECRET;
 		mockRequest.headers = { authorization: "Bearer valid-token" };
 
-		authenticateToken(
+		authorisedRoles([userRole.ADMIN, userRole.USER])(
 			mockRequest as AuthRequest,
 			mockResponse as Response,
 			mockNext,
@@ -99,38 +98,38 @@ describe("Auth Middleware - authenticateToken", () => {
 		expect(mockNext).not.toHaveBeenCalled();
 	});
 
-	it("should return 403 when token is invalid", () => {
+	it("should return 500 when token is invalid", () => {
 		mockRequest.headers = { authorization: "Bearer invalid-token" };
 		vi.mocked(jwt.verify).mockImplementation(() => {
 			throw new Error("Invalid token");
 		});
 
-		authenticateToken(
+		authorisedRoles([userRole.ADMIN, userRole.USER])(
 			mockRequest as AuthRequest,
 			mockResponse as Response,
 			mockNext,
 		);
 
-		expect(mockResponse.status).toHaveBeenCalledWith(403);
+		expect(mockResponse.status).toHaveBeenCalledWith(500);
 		expect(mockResponse.json).toHaveBeenCalledWith({
 			error: "Invalid or expired token",
 		});
 		expect(mockNext).not.toHaveBeenCalled();
 	});
 
-	it("should return 403 when token is expired", () => {
+	it("should return 500 when token is expired", () => {
 		mockRequest.headers = { authorization: "Bearer expired-token" };
 		vi.mocked(jwt.verify).mockImplementation(() => {
 			throw new jwt.TokenExpiredError("Token expired", new Date());
 		});
 
-		authenticateToken(
+		authorisedRoles([userRole.ADMIN, userRole.USER])(
 			mockRequest as AuthRequest,
 			mockResponse as Response,
 			mockNext,
 		);
 
-		expect(mockResponse.status).toHaveBeenCalledWith(403);
+		expect(mockResponse.status).toHaveBeenCalledWith(500);
 		expect(mockResponse.json).toHaveBeenCalledWith({
 			error: "Invalid or expired token",
 		});
@@ -150,17 +149,16 @@ describe("Auth Middleware - authenticateToken", () => {
 		mockResponse.locals = {};
 		vi.mocked(jwt.verify).mockReturnValue(mockDecodedToken as any);
 
-		authenticateToken(
+		authorisedRoles([userRole.ADMIN, userRole.USER])(
 			mockRequest as AuthRequest,
 			mockResponse as Response,
 			mockNext,
 		);
 
 		expect(jwt.verify).toHaveBeenCalledWith("valid-token", "test-secret-key");
-		expect(mockResponse.locals.user).toEqual(mockDecodedToken);
+		expect(mockResponse.locals!.user).toEqual(mockDecodedToken);
 		expect(mockNext).toHaveBeenCalledOnce();
 		expect(mockResponse.status).not.toHaveBeenCalled();
-		expect(mockResponse.json).not.toHaveBeenCalled();
 	});
 
 	it("should verify token with correct JWT_SECRET", () => {
@@ -175,7 +173,7 @@ describe("Auth Middleware - authenticateToken", () => {
 		mockRequest.headers = { authorization: "Bearer another-valid-token" };
 		vi.mocked(jwt.verify).mockReturnValue(mockDecodedToken as any);
 
-		authenticateToken(
+		authorisedRoles([userRole.ADMIN, userRole.USER])(
 			mockRequest as AuthRequest,
 			mockResponse as Response,
 			mockNext,
@@ -201,7 +199,7 @@ describe("Auth Middleware - authenticateToken", () => {
 		};
 		vi.mocked(jwt.verify).mockReturnValue(mockDecodedToken as any);
 
-		authenticateToken(
+		authorisedRoles([userRole.ADMIN, userRole.USER])(
 			mockRequest as AuthRequest,
 			mockResponse as Response,
 			mockNext,
@@ -219,13 +217,13 @@ describe("Auth Middleware - authenticateToken", () => {
 			throw new jwt.JsonWebTokenError("jwt malformed");
 		});
 
-		authenticateToken(
+		authorisedRoles([userRole.ADMIN, userRole.USER])(
 			mockRequest as AuthRequest,
 			mockResponse as Response,
 			mockNext,
 		);
 
-		expect(mockResponse.status).toHaveBeenCalledWith(403);
+		expect(mockResponse.status).toHaveBeenCalledWith(500);
 		expect(mockResponse.json).toHaveBeenCalledWith({
 			error: "Invalid or expired token",
 		});

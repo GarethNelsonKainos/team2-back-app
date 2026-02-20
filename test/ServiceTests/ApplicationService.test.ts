@@ -47,6 +47,8 @@ describe("ApplicationService", () => {
 		mockApplicationDao = {
 			createApplication: mockCreateApplication,
 			getApplicationsForUser: vi.fn(),
+			getApplicationsByJobRoleId: vi.fn(),
+			updateApplicationStatus: vi.fn(),
 		} as unknown as ApplicationDao;
 
 		applicationService = new ApplicationService(
@@ -327,6 +329,161 @@ describe("ApplicationService", () => {
 			await expect(
 				applicationService.getApplicationsForUser("user-123"),
 			).rejects.toThrow("Database error");
+		});
+	});
+
+	describe("getApplicationByJobRoleId", () => {
+		it("should return applications for a specific job role from DAO", async () => {
+			const mockApplications = [
+				{
+					applicationId: "app-1",
+					userId: "user-1",
+					jobRoleId: "role-123",
+					status: "IN_PROGRESS",
+					appliedAt: new Date("2026-02-16"),
+					cvUrl: "https://example.com/cv1.pdf",
+				},
+				{
+					applicationId: "app-2",
+					userId: "user-2",
+					jobRoleId: "role-123",
+					status: "HIRED",
+					appliedAt: new Date("2026-02-15"),
+					cvUrl: "https://example.com/cv2.pdf",
+				},
+			];
+
+			(mockApplicationDao.getApplicationsByJobRoleId as Mock).mockResolvedValue(
+				mockApplications,
+			);
+
+			const result =
+				await applicationService.getApplicationByJobRoleId("role-123");
+
+			expect(
+				mockApplicationDao.getApplicationsByJobRoleId,
+			).toHaveBeenCalledWith("role-123");
+			expect(result).toEqual(mockApplications);
+			expect(result).toHaveLength(2);
+		});
+
+		it("should return empty array when no applications exist for the job role", async () => {
+			(mockApplicationDao.getApplicationsByJobRoleId as Mock).mockResolvedValue(
+				[],
+			);
+
+			const result =
+				await applicationService.getApplicationByJobRoleId("role-999");
+
+			expect(
+				mockApplicationDao.getApplicationsByJobRoleId,
+			).toHaveBeenCalledWith("role-999");
+			expect(result).toEqual([]);
+		});
+
+		it("should throw error when DAO fails", async () => {
+			const daoError = new Error("Database error");
+			(mockApplicationDao.getApplicationsByJobRoleId as Mock).mockRejectedValue(
+				daoError,
+			);
+
+			await expect(
+				applicationService.getApplicationByJobRoleId("role-123"),
+			).rejects.toThrow("Database error");
+		});
+
+		it("should pass through the exact jobRoleId to DAO", async () => {
+			(mockApplicationDao.getApplicationsByJobRoleId as Mock).mockResolvedValue(
+				[],
+			);
+
+			const specificJobRoleId = "unique-job-role-id-789";
+			await applicationService.getApplicationByJobRoleId(specificJobRoleId);
+
+			expect(
+				mockApplicationDao.getApplicationsByJobRoleId,
+			).toHaveBeenCalledWith(specificJobRoleId);
+		});
+	});
+
+	describe("updateApplicationStatus", () => {
+		it("should update application status successfully", async () => {
+			(mockApplicationDao.updateApplicationStatus as Mock).mockResolvedValue(
+				undefined,
+			);
+
+			await applicationService.updateApplicationStatus(
+				"app-123",
+				ApplicationStatus.HIRED,
+			);
+
+			expect(mockApplicationDao.updateApplicationStatus).toHaveBeenCalledWith(
+				"app-123",
+				ApplicationStatus.HIRED,
+			);
+		});
+
+		it("should update application status to REJECTED", async () => {
+			(mockApplicationDao.updateApplicationStatus as Mock).mockResolvedValue(
+				undefined,
+			);
+
+			await applicationService.updateApplicationStatus(
+				"app-456",
+				ApplicationStatus.REJECTED,
+			);
+
+			expect(mockApplicationDao.updateApplicationStatus).toHaveBeenCalledWith(
+				"app-456",
+				ApplicationStatus.REJECTED,
+			);
+		});
+
+		it("should update application status to IN_PROGRESS", async () => {
+			(mockApplicationDao.updateApplicationStatus as Mock).mockResolvedValue(
+				undefined,
+			);
+
+			await applicationService.updateApplicationStatus(
+				"app-789",
+				ApplicationStatus.IN_PROGRESS,
+			);
+
+			expect(mockApplicationDao.updateApplicationStatus).toHaveBeenCalledWith(
+				"app-789",
+				ApplicationStatus.IN_PROGRESS,
+			);
+		});
+
+		it("should throw error when DAO fails", async () => {
+			const daoError = new Error("Database error");
+
+			(mockApplicationDao.updateApplicationStatus as Mock).mockRejectedValue(
+				daoError,
+			);
+
+			await expect(
+				applicationService.updateApplicationStatus(
+					"app-123",
+					ApplicationStatus.HIRED,
+				),
+			).rejects.toThrow("Database error");
+		});
+
+		it("should pass exact parameters to DAO", async () => {
+			(mockApplicationDao.updateApplicationStatus as Mock).mockResolvedValue(
+				undefined,
+			);
+
+			const appId = "specific-app-id";
+			const status = ApplicationStatus.HIRED;
+
+			await applicationService.updateApplicationStatus(appId, status);
+
+			expect(mockApplicationDao.updateApplicationStatus).toHaveBeenCalledWith(
+				appId,
+				status,
+			);
 		});
 	});
 });
