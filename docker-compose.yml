@@ -1,0 +1,21 @@
+services:
+  backend:
+    container_name: team2-back-app
+    build:
+      context: .
+      args:
+        PORT: ${PORT:-3000}
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: >
+      sh -c "export DATABASE_URL=$(printf '%s' \"$DATABASE_URL\" | sed 's/@localhost:/@host.docker.internal:/g'); npm start"
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    networks:
+      - team2-network
+
+networks:
+  team2-network:
+    external: true
