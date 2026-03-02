@@ -1,8 +1,8 @@
-node_modules
-dist
-coverage
-.git
-.github
-npm-debug.log
-*.log
-.env
+*
+
+!package.json
+!package-lock.json
+!.npmrc
+
+!src/**
+!tsconfig.json

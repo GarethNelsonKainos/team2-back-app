@@ -9,8 +9,9 @@ services:
       - .env
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    command: >
-      sh -c "export DATABASE_URL=$(printf '%s' \"$DATABASE_URL\" | sed 's/@localhost:/@host.docker.internal:/g'); npm start"
+    command:
+      - -e
+      - "process.env.DATABASE_URL=(process.env.DATABASE_URL||'').replace('@localhost:','@host.docker.internal:');require('./dist/index.js')"
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
     networks:
