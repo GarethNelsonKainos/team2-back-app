@@ -9,8 +9,14 @@
 		"dev": "tsx watch src/index.ts",
 		"build": "tsc",
 		"start": "node dist/index.js",
+
+		"container:pull": "docker network create team2-network >/dev/null 2>&1 || true && docker compose -f docker-compose.yml -f docker-compose.acr.override.yml pull",
+		"container:up": "docker network create team2-network >/dev/null 2>&1 || true && docker compose -f docker-compose.yml -f docker-compose.acr.override.yml up -d --no-build --force-recreate",
+		"container:run": "npm run container:pull && npm run container:up",
+
 		"test": "vitest",
 		"test:coverage": "vitest --coverage",
+		
 		"lint": "biome lint .",
 		"lint:fix": "biome lint --write .",
 		"format:check": "biome format .",

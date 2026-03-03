@@ -1,0 +1,4 @@
+services:
+  backend:
+    image: academyacrj3r5dv.azurecr.io/nick-team2-back-app:latest
+    pull_policy: always
