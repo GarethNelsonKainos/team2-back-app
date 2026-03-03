@@ -3,62 +3,140 @@ name: CI Pipeline
 on:
   pull_request:
     branches:
-        - main
+      - main
   push:
-    branches: 
-        - "**"
+    branches:
+      - "**"
+
+# Cancel any in-progress run on the same branch when a new push arrives.
+# This stops redundant runs stacking up when you push several commits quickly.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-    code-quality:
-        runs-on: ubuntu-latest
 
-        steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
+  # ─────────────────────────────────────────────
+  # Stage 1 (parallel): code-quality + test
+  # These two jobs are completely independent — there is no reason for one
+  # to wait on the other, so GitHub will run them simultaneously on two
+  # separate runners.
+  # ─────────────────────────────────────────────
 
-        - name: Setup Node and Dependencies
-          uses: ./.github/actions/setup
+  code-quality:
+    name: "Code Quality"
+    runs-on: ubuntu-latest
 
-        - name: Run Biome Linting
-          run: npm run lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        - name: Run Biome Formatting Check
-          run: npm run format:check
+      - name: Setup Node and Dependencies
+        uses: ./.github/actions/setup
 
-    test:
-        needs: code-quality
-        runs-on: ubuntu-latest
-        
-        steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
+      - name: Run Biome Linting
+        run: npm run lint
 
-        - name: Setup Node and Dependencies
-          uses: ./.github/actions/setup
+      - name: Run Biome Formatting Check
+        run: npm run format:check
 
-        - name: Generate Prisma Client
-          run: DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" npx prisma generate
+  test:
+    name: "Tests"
+    runs-on: ubuntu-latest
+    # No 'needs' here — runs in parallel with code-quality
 
-        - name: Run Tests with Coverage
-          env:
-            DATABASE_URL: "postgresql://dummy:dummy@localhost/dummy"
-            JWT_SECRET: "test-secret-key-for-ci-testing-minimum-32-chars"
-            JWT_EXPIRES_IN: "24h"
-          run: npm run test:coverage
-    
-    build:
-        needs: test
-        runs-on: ubuntu-latest
-        
-        steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-        - name: Setup Node and Dependencies
-          uses: ./.github/actions/setup
-        
-        - name: Generate Prisma Client
-          run: DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" npx prisma generate
+      - name: Setup Node and Dependencies
+        uses: ./.github/actions/setup
 
-        - name: Build Application
-          run: npm run build
+      - name: Generate Prisma Client
+        run: DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" npx prisma generate
+
+      - name: Run Tests with Coverage
+        env:
+          DATABASE_URL: "postgresql://dummy:dummy@localhost/dummy"
+          JWT_SECRET: "test-secret-key-for-ci-testing-minimum-32-chars"
+          JWT_EXPIRES_IN: "24h"
+        run: npm run test:coverage
+
+  # ─────────────────────────────────────────────
+  # Stage 2: compile TypeScript
+  # Waits for BOTH stage-1 jobs. Using an array in 'needs' means GitHub only
+  # proceeds here if every listed job succeeded — one failure blocks the rest.
+  # ─────────────────────────────────────────────
+
+  build:
+    name: "Build (TypeScript)"
+    needs: [code-quality, test]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node and Dependencies
+        uses: ./.github/actions/setup
+
+      - name: Generate Prisma Client
+        run: DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" npx prisma generate
+
+      - name: Compile TypeScript
+        run: npm run build
+
+  # ─────────────────────────────────────────────
+  # Stage 3: build Docker image
+  # Only runs once the TypeScript compiles cleanly. No point spending 2-4
+  # minutes on a Docker build for broken code.
+  # ─────────────────────────────────────────────
+
+  docker-build:
+    name: "Build (Docker)"
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Buildx unlocks BuildKit — required for the GHA layer cache below
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Derive short SHA tag
+        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+
+      # docker/build-push-action is the official BuildKit action.
+      # 'push: false' + 'load: true' builds locally (same as docker build) but
+      # adds cache-from / cache-to support via GitHub Actions cache storage.
+      #
+      # How the cache works:
+      #   cache-to:   after a successful build, exports each layer to the GHA
+      #               cache keyed by the Dockerfile + build context hash.
+      #               'mode=max' exports ALL intermediate stages (build-deps,
+      #               build) not just the final image — critical for multi-stage
+      #               Dockerfiles where the expensive work is in middle stages.
+      #   cache-from: at the start of docker-build, pulls matching layers back
+      #               from the cache before starting. If package-lock.json hasn't
+      #               changed, the 'npm ci' layer inside the Dockerfile is a
+      #               cache hit and is restored in seconds rather than re-run.
+      #
+      # First run:  builds everything cold, exports cache (~same time as before)
+      # Later runs: unchanged layers are skipped entirely — the npm ci stage
+      #             (the slowest part of the Dockerfile) is typically a cache hit
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          load: true
+          tags: |
+            team2-back-app:${{ github.sha }}
+            team2-back-app:${{ env.SHORT_SHA }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Confirm image exists
+        run: docker image inspect team2-back-app:${{ env.SHORT_SHA }}

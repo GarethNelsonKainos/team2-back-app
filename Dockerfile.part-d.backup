@@ -1,0 +1,23 @@
+# Build production dependencies
+FROM node:20-bookworm-slim AS deps
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --omit=dev
+
+# Build app
+FROM node:20-bookworm-slim AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# Small runtime image
+FROM gcr.io/distroless/nodejs20-debian12:nonroot
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+
+EXPOSE 3000
+CMD ["dist/main.js"]

@@ -1,0 +1,24 @@
+# Base manifest stage (stable cache key)
+FROM node:20-bookworm-slim AS manifest
+WORKDIR /app
+COPY package.json package-lock.json ./
+
+# Install full deps once for build
+FROM manifest AS build-deps
+RUN npm ci && npm cache clean --force
+
+# Build app
+FROM build-deps AS build
+COPY . .
+RUN npm run build
+RUN npm prune --omit=dev
+
+# Runtime image
+FROM gcr.io/distroless/nodejs20-debian12:nonroot
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+
+EXPOSE 3000
+CMD ["dist/index.js"]

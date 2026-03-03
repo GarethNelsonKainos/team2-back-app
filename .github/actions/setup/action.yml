@@ -7,7 +7,17 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: '20'
-    
+        # Cache the global npm cache (~/.npm) keyed on the hash of package-lock.json.
+        # On a cache hit the next step skips the network entirely — packages are
+        # restored from the runner's local cache instead of downloaded from the registry.
+        # On a cache miss it installs normally and saves the result for the next run.
+        cache: 'npm'
+
     - name: Install dependencies
-      run: npm install
+      # npm ci (clean install) is the correct command for CI:
+      #   - Requires package-lock.json to exist (errors if missing)
+      #   - Never modifies package-lock.json
+      #   - Deletes node_modules before installing (reproducible)
+      #   - ~2x faster than npm install on a warm cache
+      run: npm ci
       shell: bash

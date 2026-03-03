@@ -1,0 +1,31 @@
+# Dependencies / build output
+node_modules
+dist
+build
+coverage
+
+# VCS
+.git
+.gitignore
+
+# Environment/secrets
+.env
+.env.*
+!.env.example
+
+# Docs
+*.md
+docs
+
+# Tests
+test
+tests
+__tests__
+*.spec.ts
+*.test.ts
+
+# IDE / OS noise
+.vscode
+.idea
+.DS_Store
+npm-debug.log*
