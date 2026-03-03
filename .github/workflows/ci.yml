@@ -71,6 +71,23 @@ jobs:
         - name: Checkout code
           uses: actions/checkout@v4
 
+        - name: Login to Azure Container Registry
+          uses: azure/docker-login@v1
+          with:
+            login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+            username: ${{ secrets.ACR_USERNAME }}
+            password: ${{ secrets.ACR_PASSWORD }}
+
         - name: Build Docker Image
           run: |
-            docker build --build-arg DATABASE_URL="postgresql://sam@localhost:5432/postgres?schema=job_roles_db" -t team2-back-app:latest .
+            docker build --build-arg DATABASE_URL="postgresql://sam@localhost:5432/postgres?schema=job_roles_db" -t team2-back-app-pipeline:latest .
+
+        - name: Tag Docker Image
+          run: |
+            docker tag team2-back-app-pipeline:latest ${{ secrets.ACR_LOGIN_SERVER }}/team2-back-app-pipeline:latest
+            docker tag team2-back-app-pipeline:latest ${{ secrets.ACR_LOGIN_SERVER }}/team2-back-app-pipeline:${{ github.sha }}
+
+        - name: Push Docker Image
+          run: |
+            docker push ${{ secrets.ACR_LOGIN_SERVER }}/team2-back-app-pipeline:latest
+            docker push ${{ secrets.ACR_LOGIN_SERVER }}/team2-back-app-pipeline:${{ github.sha }}   
