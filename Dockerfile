@@ -11,9 +11,9 @@ RUN npm ci && npm cache clean --force
 FROM build-deps AS build
 COPY . .
 # Generate Prisma client types before compiling TypeScript.
-# The CLI reads DATABASE_URL to determine the provider (postgres), but does
-# not open a connection — a dummy URL is sufficient and matches what CI uses.
-RUN DATABASE_URL="postgresql://david.ohanlon@localhost:5432/postgres?schema=job_roles_db" npx prisma generate
+# The CLI reads DATABASE_URL only to determine the DB provider — it does NOT
+# open a real connection. A dummy URL is sufficient (matches CI behaviour).
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" npx prisma generate
 RUN npm run build
 RUN npm prune --omit=dev
 

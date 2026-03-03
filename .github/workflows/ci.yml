@@ -101,42 +101,83 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Buildx unlocks BuildKit — required for the GHA layer cache below
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Derive short SHA tag
-        run: echo "SHORT_SHA=${GITHUB_SHA::7}" >> $GITHUB_ENV
+      # Decide whether this run should push to ACR.
+      # Rule: only push when a commit lands on main via a direct push (not a PR).
+      # A pull_request event targeting main should build and validate, but NOT push —
+      # unreviewed code should never reach the registry.
+      #
+      # We also compute the short SHA here and write the full tag list to
+      # $GITHUB_OUTPUT so the build step can consume it cleanly.
+      - name: Compute build metadata
+        id: meta
+        run: |
+          SHORT_SHA=${GITHUB_SHA::7}
+          echo "SHORT_SHA=$SHORT_SHA" >> $GITHUB_ENV
 
-      # docker/build-push-action is the official BuildKit action.
-      # 'push: false' + 'load: true' builds locally (same as docker build) but
-      # adds cache-from / cache-to support via GitHub Actions cache storage.
+          # Determine if this is a push to main (the only case we publish to ACR)
+          if [[ "${{ github.ref }}" == "refs/heads/main" && "${{ github.event_name }}" == "push" ]]; then
+            IS_MAIN_PUSH=true
+          else
+            IS_MAIN_PUSH=false
+          fi
+          echo "is_main_push=$IS_MAIN_PUSH" >> $GITHUB_OUTPUT
+
+          # Build the tag list.
+          # On any branch: local tags for build verification.
+          # On main push only: also tag with the ACR registry prefix so the
+          #   build-push-action knows where to send them.
+          #   Three ACR tags are applied:
+          #     :<full-sha>   immutable, traceable to an exact commit
+          #     :<short-sha>  human-readable
+          #     :latest       convenience pointer, always reflects current main
+          TAGS="team2-back-app:${GITHUB_SHA}\nteam2-back-app:${SHORT_SHA}"
+
+          if [[ "$IS_MAIN_PUSH" == "true" ]]; then
+            TAGS="$TAGS\n${{ secrets.ACR_LOGIN_SERVER }}/team2-back-app:${GITHUB_SHA}"
+            TAGS="$TAGS\n${{ secrets.ACR_LOGIN_SERVER }}/team2-back-app:${SHORT_SHA}"
+            TAGS="$TAGS\n${{ secrets.ACR_LOGIN_SERVER }}/team2-back-app:latest"
+          fi
+
+          # Write multi-line output using the heredoc syntax GitHub requires
+          echo "tags<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$TAGS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # Login only happens on main-branch pushes — secrets are not accessed on PRs.
+      # Authentication uses a Service Principal scoped to AcrPush on this registry:
+      #   ACR_LOGIN_SERVER  = academyacrj3r5dv.azurecr.io
+      #   ACR_USERNAME      = Service Principal App (client) ID
+      #   ACR_PASSWORD      = Service Principal client secret
+      # Set these in: GitHub repo → Settings → Secrets and variables → Actions
+      - name: Login to Azure Container Registry
+        if: steps.meta.outputs.is_main_push == 'true'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ secrets.ACR_LOGIN_SERVER }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      # Single build step handles both cases:
+      #   PR / feature branch  → push: false, load: true  (image stays on runner for inspection)
+      #   main push            → push: true,  load: false (image goes straight to ACR)
       #
-      # How the cache works:
-      #   cache-to:   after a successful build, exports each layer to the GHA
-      #               cache keyed by the Dockerfile + build context hash.
-      #               'mode=max' exports ALL intermediate stages (build-deps,
-      #               build) not just the final image — critical for multi-stage
-      #               Dockerfiles where the expensive work is in middle stages.
-      #   cache-from: at the start of docker-build, pulls matching layers back
-      #               from the cache before starting. If package-lock.json hasn't
-      #               changed, the 'npm ci' layer inside the Dockerfile is a
-      #               cache hit and is restored in seconds rather than re-run.
-      #
-      # First run:  builds everything cold, exports cache (~same time as before)
-      # Later runs: unchanged layers are skipped entirely — the npm ci stage
-      #             (the slowest part of the Dockerfile) is typically a cache hit
-      - name: Build Docker image
+      # GHA cache (cache-from/cache-to) means repeated pushes that don't change
+      # dependencies or source files reuse cached layers — typically 60-90s saved.
+      - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: false
-          load: true
-          tags: |
-            team2-back-app:${{ github.sha }}
-            team2-back-app:${{ env.SHORT_SHA }}
+          push: ${{ steps.meta.outputs.is_main_push == 'true' }}
+          load: ${{ steps.meta.outputs.is_main_push != 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Confirm image exists
+      # Verify the image is in the local daemon — only meaningful on PR/branch builds
+      # where load: true put it there. On main the image is in ACR, not the local daemon.
+      - name: Confirm image built (PR / feature branch)
+        if: steps.meta.outputs.is_main_push != 'true'
         run: docker image inspect team2-back-app:${{ env.SHORT_SHA }}
