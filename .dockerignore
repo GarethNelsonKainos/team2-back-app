@@ -1,0 +1,57 @@
+# Development and build artifacts
+node_modules
+dist
+coverage
+*.log
+npm-debug.log*
+
+# Tests
+test
+tests
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+vitest.config.ts
+
+# Version control
+.git
+.gitignore
+.github
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+
+# Documentation
+README.md
+*.md
+docs
+
+# Docker files (don't copy into context)
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# CI/CD
+.github/workflows
+
+# Prisma migrations (copied separately in Dockerfile)
+# Keep this commented - we DO need migrations in context
+# prisma/migrations
+
+# Miscellaneous
+*.tsbuildinfo
+.eslintcache
+biome.json
+.prettierrc*
+.eslintrc*

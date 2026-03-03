@@ -62,3 +62,15 @@ jobs:
 
         - name: Build Application
           run: npm run build
+
+    Containerise:
+        needs: build
+        runs-on: ubuntu-latest
+        
+        steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+
+        - name: Build Docker Image
+          run: |
+            docker build -t team2-back-app-pipeline:latest .
