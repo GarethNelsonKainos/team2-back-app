@@ -5,7 +5,7 @@ async function main() {
 	try {
 		//================== users ============================
 		// Hash password with Argon2
-		const hashedPassword = await argon2.hash("password123");
+		const hashedPassword = await argon2.hash("Password123!");
 
 		// Create admin user
 		const admin = await prisma.user.upsert({
@@ -49,7 +49,7 @@ async function main() {
 		});
 		console.log("Created User:", johnDoe);
 
-		console.log("✅ All users created with password: password123");
+		console.log("✅ All users created with password: Password123!");
 
 		//===========================================================
 		//==================capabilities============================
@@ -301,6 +301,7 @@ async function main() {
 				})
 			)[0].jobRoleId,
 			cvUrl: "https://example.com/cv1.pdf",
+			status: "IN_PROGRESS"
 		},
 	});
 	console.log("Created Application:", application1);
@@ -316,6 +317,7 @@ async function main() {
 				await prisma.jobRole.findMany({ where: { roleName: "Test Engineer" } })
 			)[0].jobRoleId,
 			cvUrl: "https://example.com/cv2.pdf",
+			status: "IN_PROGRESS"
 		},
 	});
 	console.log("Created Application:", application2);
@@ -333,6 +335,7 @@ async function main() {
 				})
 			)[0].jobRoleId,
 			cvUrl: "https://example.com/cv3.pdf",
+			status: "IN_PROGRESS"
 		},
 	});
 	console.log("Created Application:", application3);
