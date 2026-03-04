@@ -10,6 +10,11 @@ on:
 
 env:
   IMAGE_NAME: team2-back-app-pipeline
+  ACR_NAME: academyacrj3r5dv
+  ACR_RESOURCE_GROUP: rg-academy-acr
+  AZURE_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ secrets.TENANT_ID }}
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
 
 jobs:
     code-quality:
@@ -81,19 +86,25 @@ jobs:
         - name: Azure Login (Service Principal)
           uses: azure/login@v2
           with:
-            client-id: ${{ secrets.CLIENT_ID }}
-            tenant-id: ${{ secrets.TENANT_ID }}
-            subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
+            client-id: ${{ env.AZURE_CLIENT_ID }}
+            tenant-id: ${{ env.AZURE_TENANT_ID }}
+            subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
         - name: Login to Azure Container Registry
-          run: az acr login --name $(echo "${{ secrets.ACR_LOGIN_SERVER }}" | cut -d'.' -f1)
+          run: az acr login --name ${{ env.ACR_NAME }}
+
+        - name: Resolve ACR Login Server
+          id: acr
+          run: |
+            LOGIN_SERVER=$(az acr show --name ${{ env.ACR_NAME }} --resource-group ${{ env.ACR_RESOURCE_GROUP }} --query loginServer -o tsv)
+            echo "login_server=$LOGIN_SERVER" >> "$GITHUB_OUTPUT"
 
         - name: Tag Docker Image
           run: |
-            docker tag ${{ env.IMAGE_NAME }}:latest ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
-            docker tag ${{ env.IMAGE_NAME }}:latest ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            docker tag ${{ env.IMAGE_NAME }}:latest ${{ steps.acr.outputs.login_server }}/${{ env.IMAGE_NAME }}:latest
+            docker tag ${{ env.IMAGE_NAME }}:latest ${{ steps.acr.outputs.login_server }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
         - name: Push Docker Image
           run: |
-            docker push ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
-            docker push ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            docker push ${{ steps.acr.outputs.login_server }}/${{ env.IMAGE_NAME }}:latest
+            docker push ${{ steps.acr.outputs.login_server }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
