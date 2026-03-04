@@ -13,12 +13,8 @@ permissions:
   id-token: write
 
 env:
-  IMAGE_NAME: team2-back-app-pipeline
   ACR_NAME: academyacrj3r5dv
   ACR_RESOURCE_GROUP: rg-academy-acr
-  AZURE_CLIENT_ID: ${{ secrets.CLIENT_ID }}
-  AZURE_TENANT_ID: ${{ secrets.TENANT_ID }}
-  AZURE_SUBSCRIPTION_ID: ${{ secrets.SUBSCRIPTION_ID }}
 
 jobs:
     code-quality:
@@ -83,37 +79,23 @@ jobs:
         - name: Checkout code
           uses: actions/checkout@v4
 
+        - name: Azure Login (Service Principal)
+          uses: azure/docker-login@v1
+          with:
+            login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+            username: ${{ secrets.ACR_USERNAME }}
+            password: ${{ secrets.ACR_PASSWORD }}
+
         - name: Build Docker Image
           run: |
-            docker build --build-arg DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" -t ${{ env.IMAGE_NAME }}:latest .
-
-        - name: Azure Login (Service Principal)
-          if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-          uses: azure/login@v2
-          with:
-            client-id: ${{ env.AZURE_CLIENT_ID }}
-            tenant-id: ${{ env.AZURE_TENANT_ID }}
-            subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
-
-        - name: Login to Azure Container Registry
-          if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-          run: az acr login --name ${{ env.ACR_NAME }}
-
-        - name: Resolve ACR Login Server
-          id: acr
-          if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-          run: |
-            LOGIN_SERVER=$(az acr show --name ${{ env.ACR_NAME }} --resource-group ${{ env.ACR_RESOURCE_GROUP }} --query loginServer -o tsv)
-            echo "login_server=$LOGIN_SERVER" >> "$GITHUB_OUTPUT"
+            docker build --build-arg DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" -t team2-back-app-pipeline:latest .
 
         - name: Tag Docker Image
-          if: github.event_name == 'push' && github.ref == 'refs/heads/main'
           run: |
-            docker tag ${{ env.IMAGE_NAME }}:latest ${{ steps.acr.outputs.login_server }}/${{ env.IMAGE_NAME }}:latest
-            docker tag ${{ env.IMAGE_NAME }}:latest ${{ steps.acr.outputs.login_server }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            docker tag team2-back-app-pipeline:latest ${{ secrets.ACR_LOGIN_SERVER }}/team2-back-app-pipeline:latest
+            docker tag team2-back-app-pipeline:latest ${{ secrets.ACR_LOGIN_SERVER }}/team2-back-app-pipeline:${{ github.sha }}
 
         - name: Push Docker Image
-          if: github.event_name == 'push' && github.ref == 'refs/heads/main'
           run: |
-            docker push ${{ steps.acr.outputs.login_server }}/${{ env.IMAGE_NAME }}:latest
-            docker push ${{ steps.acr.outputs.login_server }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            docker push ${{ secrets.ACR_LOGIN_SERVER }}/team2-back-app-pipeline:latest
+            docker push ${{ secrets.ACR_LOGIN_SERVER }}/team2-back-app-pipeline:${{ github.sha }}
