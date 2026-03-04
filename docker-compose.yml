@@ -3,8 +3,6 @@ services:
     container_name: team2-back-app
     build:
       context: .
-      args:
-        PORT: ${PORT:-3000}
     env_file:
       - .env
     extra_hosts:
