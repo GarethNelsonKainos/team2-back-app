@@ -11,7 +11,7 @@
 		"start": "node dist/index.js",
 
 		"container:pull": "docker network create team2-network >/dev/null 2>&1 || true && docker compose -f docker-compose.yml -f docker-compose.acr.override.yml pull",
-		"container:up": "docker network create team2-network >/dev/null 2>&1 || true && docker compose -f docker-compose.yml -f docker-compose.acr.override.yml up -d --no-build --force-recreate",
+		"container:up": "docker network create team2-network >/dev/null 2>&1 || true && (docker compose -f docker-compose.yml -f docker-compose.acr.override.yml up -d --no-build --force-recreate && sleep 2 && docker ps --filter name=team2-back-app --filter status=running --format '{{.Names}}' | grep -q '^team2-back-app$') || (echo 'ACR image unavailable/unhealthy, falling back to local build...' && docker compose build --build-arg RUN_PRISMA_GENERATE=false && docker compose up -d --force-recreate)",
 		"container:local": "docker network create team2-network >/dev/null 2>&1 || true && docker compose build && docker compose up",
 		"container:run": "npm run container:pull && npm run container:up",
 

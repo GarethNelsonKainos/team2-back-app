@@ -79,7 +79,6 @@ jobs:
             docker build --build-arg DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" -t ${{ env.IMAGE_NAME }}:latest .
 
         - name: Azure Login (Service Principal)
-          if: github.event_name == 'push' && github.ref == 'refs/heads/main'
           uses: azure/login@v2
           with:
             client-id: ${{ secrets.CLIENT_ID }}
@@ -87,17 +86,14 @@ jobs:
             subscription-id: ${{ secrets.SUBSCRIPTION_ID }}
 
         - name: Login to Azure Container Registry
-          if: github.event_name == 'push' && github.ref == 'refs/heads/main'
           run: az acr login --name $(echo "${{ secrets.ACR_LOGIN_SERVER }}" | cut -d'.' -f1)
 
         - name: Tag Docker Image
-          if: github.event_name == 'push' && github.ref == 'refs/heads/main'
           run: |
             docker tag ${{ env.IMAGE_NAME }}:latest ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
             docker tag ${{ env.IMAGE_NAME }}:latest ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
         - name: Push Docker Image
-          if: github.event_name == 'push' && github.ref == 'refs/heads/main'
           run: |
             docker push ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
             docker push ${{ secrets.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
