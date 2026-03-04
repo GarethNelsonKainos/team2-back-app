@@ -301,7 +301,7 @@ async function main() {
 				})
 			)[0].jobRoleId,
 			cvUrl: "https://example.com/cv1.pdf",
-			status: "IN_PROGRESS"
+			status: "IN_PROGRESS",
 		},
 	});
 	console.log("Created Application:", application1);
@@ -317,7 +317,7 @@ async function main() {
 				await prisma.jobRole.findMany({ where: { roleName: "Test Engineer" } })
 			)[0].jobRoleId,
 			cvUrl: "https://example.com/cv2.pdf",
-			status: "IN_PROGRESS"
+			status: "IN_PROGRESS",
 		},
 	});
 	console.log("Created Application:", application2);
@@ -335,7 +335,7 @@ async function main() {
 				})
 			)[0].jobRoleId,
 			cvUrl: "https://example.com/cv3.pdf",
-			status: "IN_PROGRESS"
+			status: "IN_PROGRESS",
 		},
 	});
 	console.log("Created Application:", application3);
