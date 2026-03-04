@@ -76,7 +76,7 @@ jobs:
 
         - name: Build Docker Image
           run: |
-            docker build --build-arg DATABASE_URL="postgresql://sam@localhost:5432/postgres?schema=job_roles_db" -t ${{ env.IMAGE_NAME }}:latest .
+            docker build --build-arg DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" -t ${{ env.IMAGE_NAME }}:latest .
 
         - name: Azure Login (Service Principal)
           if: github.event_name == 'push' && github.ref == 'refs/heads/main'
