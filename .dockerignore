@@ -3,6 +3,7 @@
 !package.json
 !package-lock.json
 !.npmrc
-
-!src/**
 !tsconfig.json
+!prisma.config.ts
+!prisma/**
+!src/**
