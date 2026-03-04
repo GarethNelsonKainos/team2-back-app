@@ -12,7 +12,7 @@
 
 		"container:pull": "docker network create team2-network >/dev/null 2>&1 || true && docker compose -f docker-compose.yml -f docker-compose.acr.override.yml pull",
 		"container:up": "docker network create team2-network >/dev/null 2>&1 || true && docker compose -f docker-compose.yml -f docker-compose.acr.override.yml up -d --no-build --force-recreate",
-		"container:local": "docker network create team2-network >/dev/null 2>&1 || true && API_BASE_URL=${API_CONTAINER_URL:-http://team2-back-app:3000} docker compose build && API_BASE_URL=${API_CONTAINER_URL:-http://team2-back-app:3000} docker compose up",
+		"container:local": "docker network create team2-network >/dev/null 2>&1 || true && docker compose build && docker compose up",
 		"container:run": "npm run container:pull && npm run container:up",
 
 		"test": "vitest",
