@@ -35,4 +35,4 @@ COPY --from=builder /app/node_modules ./node_modules
 
 EXPOSE 8080
 
-CMD ["dist/index.js"]
+CMD ["sh", "-c", "npx prisma migrate deploy && npx tsx prisma/seed.ts || true && node dist/index.js"]
