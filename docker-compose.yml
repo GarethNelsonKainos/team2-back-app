@@ -1,0 +1,20 @@
+services:
+  backend:
+    container_name: team2-back-app
+    build:
+      context: .
+    env_file:
+      - .env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command:
+      - -e
+      - "const databaseUrl=process.env.DATABASE_URL;if(databaseUrl){try{const parsedUrl=new URL(databaseUrl);if(['localhost','127.0.0.1','::1'].includes(parsedUrl.hostname)){parsedUrl.hostname='host.docker.internal';process.env.DATABASE_URL=parsedUrl.toString();}}catch{process.env.DATABASE_URL=databaseUrl.replace('@localhost:','@host.docker.internal:').replace('@127.0.0.1:','@host.docker.internal:').replace('@[::1]:','@host.docker.internal:');}}require('./dist/index.js')"
+    ports:
+      - "${PORT:-3000}:${PORT:-3000}"
+    networks:
+      - team2-network
+
+networks:
+  team2-network:
+    external: true

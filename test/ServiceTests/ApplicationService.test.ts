@@ -1,7 +1,15 @@
-import { describe, it, expect, vi, beforeEach, afterEach, Mock } from "vitest";
+import {
+	describe,
+	it,
+	expect,
+	vi,
+	beforeEach,
+	afterEach,
+	type Mock,
+} from "vitest";
 import { ApplicationService } from "../../src/services/application.service.js";
-import { ApplicationDao } from "../../src/daos/application.dao.js";
-import { S3Service } from "../../src/services/s3.service.js";
+import type { ApplicationDao } from "../../src/daos/application.dao.js";
+import type { S3Service } from "../../src/services/s3.service.js";
 import { ApplicationStatus } from "../../src/types/CreateApplication.js";
 
 // Mock the dependencies
