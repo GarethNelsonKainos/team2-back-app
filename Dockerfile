@@ -20,7 +20,11 @@ COPY prisma.config.ts ./
 COPY prisma ./prisma
 COPY src ./src
 
-RUN if [ "$RUN_PRISMA_GENERATE" = "true" ]; then npx prisma generate; else echo "Skipping prisma generate"; fi
+RUN if [ "$RUN_PRISMA_GENERATE" = "true" ]; then \
+    NODE_TLS_REJECT_UNAUTHORIZED=0 npx prisma generate; \
+  else \
+    echo "Skipping prisma generate"; \
+  fi
 RUN npm run build
 RUN npm prune --omit=dev \
   && npm install --no-save prisma tsx
