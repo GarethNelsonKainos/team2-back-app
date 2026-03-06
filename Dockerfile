@@ -24,7 +24,7 @@ RUN if [ "$RUN_PRISMA_GENERATE" = "true" ]; then npx prisma generate; else echo 
 RUN npm run build
 RUN npm prune --omit=dev
 
-FROM gcr.io/distroless/nodejs22-debian12:nonroot AS runner
+FROM node:22-bookworm-slim AS runner
 
 WORKDIR /app
 
