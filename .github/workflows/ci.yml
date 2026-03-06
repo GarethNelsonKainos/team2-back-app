@@ -79,16 +79,16 @@ jobs:
         - name: Checkout code
           uses: actions/checkout@v4
 
+        - name: Build Docker Image
+          run: |
+            docker build --build-arg DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" -t team2-back-app-pipeline:latest .
+
         - name: Azure Login (Service Principal)
           uses: azure/docker-login@v1
           with:
             login-server: ${{ secrets.ACR_LOGIN_SERVER }}
             username: ${{ secrets.ACR_USERNAME }}
             password: ${{ secrets.ACR_PASSWORD }}
-
-        - name: Build Docker Image
-          run: |
-            docker build --build-arg DATABASE_URL="postgresql://dummy:dummy@localhost/dummy" -t team2-back-app-pipeline:latest .
 
         - name: Tag Docker Image
           run: |
