@@ -1,9 +1,11 @@
+# Ignore everything
 *
 
+# But don't ignore these
 !package.json
 !package-lock.json
 !.npmrc
 !tsconfig.json
 !prisma.config.ts
-!prisma/**
-!src/**
+!prisma
+!src
